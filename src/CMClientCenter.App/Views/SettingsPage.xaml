@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page x:Class="CMClientCenter.App.Views.SettingsPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Spacing="16">
+        <TextBlock Text="Einstellungen" Style="{StaticResource TitleTextBlockStyle}"/>
+        <TextBlock Text="TODO: Theme, WinRM-Timeout, Credentials-Speicherung" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+    </StackPanel>
+</Page>

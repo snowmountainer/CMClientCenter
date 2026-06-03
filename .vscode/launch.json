@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "CMClientCenter (Debug x64)",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}/src/CMClientCenter.App/CMClientCenter.App.csproj",
+            "args": [],
+            "env": {},
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        }
+    ]
+}

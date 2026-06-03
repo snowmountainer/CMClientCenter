@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="CMClientCenter.App.Views.ActionsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:CMClientCenter.Core.Models">
+
+    <StackPanel Spacing="16" Padding="0,0,16,16">
+        <TextBlock Text="CM Actions" Style="{StaticResource TitleTextBlockStyle}"/>
+
+        <InfoBar x:Name="NotConnectedBar" IsOpen="True" IsClosable="False"
+                 Severity="Warning" Message="Bitte zuerst mit einem Computer verbinden."/>
+
+        <InfoBar x:Name="ResultBar" IsOpen="False" IsClosable="True"/>
+
+        <ItemsControl x:Name="ActionsList">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="models:CMAction">
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1" CornerRadius="8"
+                            Padding="16,12" Margin="0,0,0,8">
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="{x:Bind Name}"
+                                           Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                                <TextBlock Text="{x:Bind Description}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           FontSize="12"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Auslösen"
+                                    VerticalAlignment="Center" MinWidth="100"
+                                    Tag="{x:Bind}"
+                                    Click="ActionButton_Click"/>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1" CornerRadius="8" Padding="12">
+            <Grid RowSpacing="6">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="120"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Ausführungs-Log"
+                               Style="{StaticResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" x:Name="ClearLogButton"
+                            Content="Leeren" FontSize="11" Padding="8,4"/>
+                </Grid>
+                <ScrollViewer Grid.Row="1">
+                    <TextBlock x:Name="LogText" FontFamily="Consolas"
+                               FontSize="11" TextWrapping="Wrap"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </StackPanel>
+</Page>

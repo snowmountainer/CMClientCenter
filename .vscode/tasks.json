@@ -1,0 +1,28 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/CMClientCenter.sln",
+                "--configuration", "Debug",
+                "--arch", "x64"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "restore",
+            "command": "dotnet",
+            "type": "process",
+            "args": ["restore", "${workspaceFolder}/CMClientCenter.sln"],
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}

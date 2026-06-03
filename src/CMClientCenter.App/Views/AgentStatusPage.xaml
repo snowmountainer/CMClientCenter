@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="CMClientCenter.App.Views.AgentStatusPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid RowSpacing="12" Padding="0,0,16,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Agent Status" Style="{StaticResource TitleTextBlockStyle}"
+                       VerticalAlignment="Center"/>
+            <Button Grid.Column="1" Content="Aktualisieren"
+                    x:Name="RefreshButton" VerticalAlignment="Center"/>
+        </Grid>
+
+        <ProgressBar Grid.Row="1" x:Name="LoadingBar"
+                     IsIndeterminate="True" Visibility="Collapsed"/>
+        <InfoBar Grid.Row="2" x:Name="ErrorBar"
+                 IsOpen="False" Severity="Error" IsClosable="True"/>
+
+        <!-- Summary Badges -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8">
+            <Border x:Name="HealthyBadge" Background="ForestGreen"
+                    CornerRadius="6" Padding="12,4">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Text="✓" Foreground="White" FontWeight="Bold"/>
+                    <TextBlock x:Name="HealthyCount" Text="0"
+                               Foreground="White" FontWeight="SemiBold"/>
+                    <TextBlock Text="OK" Foreground="White" Opacity="0.8" FontSize="12"/>
+                </StackPanel>
+            </Border>
+            <Border x:Name="WarningBadge" Background="DarkOrange"
+                    CornerRadius="6" Padding="12,4">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Text="⚠" Foreground="White" FontWeight="Bold"/>
+                    <TextBlock x:Name="WarningCount" Text="0"
+                               Foreground="White" FontWeight="SemiBold"/>
+                    <TextBlock Text="Warnung" Foreground="White" Opacity="0.8" FontSize="12"/>
+                </StackPanel>
+            </Border>
+            <Border x:Name="ErrorBadge" Background="Crimson"
+                    CornerRadius="6" Padding="12,4">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Text="✗" Foreground="White" FontWeight="Bold"/>
+                    <TextBlock x:Name="ErrorCount" Text="0"
+                               Foreground="White" FontWeight="SemiBold"/>
+                    <TextBlock Text="Fehler" Foreground="White" Opacity="0.8" FontSize="12"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <!-- Health Checks gruppiert -->
+        <ScrollViewer Grid.Row="4">
+            <StackPanel x:Name="ChecksPanel" Spacing="12"/>
+        </ScrollViewer>
+    </Grid>
+</Page>

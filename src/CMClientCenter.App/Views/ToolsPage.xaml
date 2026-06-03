@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page x:Class="CMClientCenter.App.Views.ToolsPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:models="using:CMClientCenter.Core.Models">
+    <ScrollViewer Padding="0,0,16,16">
+        <StackPanel Spacing="12">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Tools" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center"/>
+                <Button Grid.Column="1" Content="Aktualisieren" x:Name="RefreshButton"/>
+            </Grid>
+            <ProgressBar x:Name="LoadingBar" IsIndeterminate="True" Visibility="Collapsed"/>
+            <InfoBar x:Name="ResultBar" IsOpen="False" IsClosable="True"/>
+            <InfoBar x:Name="ErrorBar"  IsOpen="False" Severity="Error" IsClosable="True"/>
+
+            <!-- Cache -->
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1" CornerRadius="8" Padding="16">
+                <StackPanel Spacing="8">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Text="CCM Cache" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                        <Button Grid.Column="1" Content="Cache leeren" x:Name="ClearCacheButton"/>
+                    </Grid>
+                    <Grid ColumnSpacing="12" RowSpacing="4">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Pfad" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="CachePath" Text="-"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Konfiguriert" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="CacheSize" Text="-"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Belegt" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="CacheUsed" Text="-"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Frei" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="CacheFree" Text="-"/>
+                    </Grid>
+                    <TextBlock x:Name="CacheItemsHeader" Text="Cache-Einträge (0)"
+                               Style="{StaticResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <ListView x:Name="CacheItemsList" MaxHeight="160" SelectionMode="None">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem"><Setter Property="Padding" Value="8,3"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:CacheItem">
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="60"/><ColumnDefinition Width="130"/></Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{x:Bind ContentId}" FontSize="11" FontFamily="Consolas" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind Location}"/>
+                                    <TextBlock Grid.Column="1" Text="{x:Bind SizeMB}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Grid.Column="2" Text="{x:Bind LastRefTime}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+            </Border>
+
+            <!-- Client -->
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1" CornerRadius="8" Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="CCM Client" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Client reparieren" x:Name="RepairButton"/>
+                        <Button Content="Client neu installieren" x:Name="ReinstallButton"/>
+                    </StackPanel>
+                    <InfoBar x:Name="CCMSetupBar" IsOpen="False" Severity="Informational"
+                             IsClosable="False" Message="ccmsetup.exe läuft aktuell..."/>
+                </StackPanel>
+            </Border>
+
+            <!-- Reboot -->
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1" CornerRadius="8" Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Neustart" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                    <TextBlock x:Name="RebootStatus" Text="-"/>
+                    <TextBlock x:Name="RebootSources" Text="" FontSize="11"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Neustart (30s)" x:Name="RebootButton"/>
+                        <Button Content="Neustart abbrechen" x:Name="CancelRebootButton"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Applications -->
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1" CornerRadius="8" Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock x:Name="AppsHeader" Text="Applications (0)"
+                               Style="{StaticResource SubtitleTextBlockStyle}"/>
+                    <ListView x:Name="AppsList" SelectionMode="None">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem"><Setter Property="Padding" Value="8,6"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:CCMApplication">
+                                <Grid ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="3*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                                            <Run Text="{x:Bind Publisher}"/><Run Text=" "/><Run Text="{x:Bind SoftwareVersion}"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{x:Bind InstallState}"
+                                               VerticalAlignment="Center" FontSize="12"/>
+                                    <DropDownButton Grid.Column="2" Content="Aktion"
+                                                    VerticalAlignment="Center" Tag="{x:Bind}">
+                                        <DropDownButton.Flyout>
+                                            <MenuFlyout>
+                                                <MenuFlyoutItem Text="Installieren"  Tag="Install"    Click="AppAction_Click"/>
+                                                <MenuFlyoutItem Text="Reparieren"    Tag="Repair"     Click="AppAction_Click"/>
+                                                <MenuFlyoutItem Text="Deinstallieren" Tag="Uninstall" Click="AppAction_Click"/>
+                                            </MenuFlyout>
+                                        </DropDownButton.Flyout>
+                                    </DropDownButton>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>
