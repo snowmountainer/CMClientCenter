@@ -355,7 +355,7 @@ public class ToolsExecutor(RunspaceManager runspace, ILogger<ToolsExecutor> logg
                             PSObjectMapper.GetString(ap,"InstallState"), PSObjectMapper.GetString(ap,"ResolvedState")));
 
             return Result<CCMToolsInfo>.Success(new CCMToolsInfo(
-                PSObjectMapper.GetInt(o,"CacheSize"),  PSObjectMapper.GetInt(o,"CacheUsedMB"),
+                PSObjectMapper.GetInt(o,"CacheSizeMB"), PSObjectMapper.GetInt(o,"CacheUsedMB"),
                 PSObjectMapper.GetInt(o,"CacheFreeMB"), PSObjectMapper.GetString(o,"CachePath"),
                 cacheItems, PSObjectMapper.GetBool(o,"RebootPending"), rebootSources, apps,
                 PSObjectMapper.GetBool(o,"CCMSetupRunning")));
