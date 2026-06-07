@@ -1,34 +1,109 @@
-# Invoke-CCMTool.ps1 — $ToolAction wird vor Script gesetzt
-$result = [PSCustomObject]@{ Success=$false; Message="" }
+# Invoke-CCMTool.ps1 — PS 5.1 kompatibel
+# $ToolAction wird vor dem Script gesetzt
+
+$result = [PSCustomObject]@{ Success = $false; Message = "" }
+
 switch ($ToolAction) {
+
     "ClearCache" {
         try {
-            $items = Get-CimInstance -Namespace "ROOT\ccm\SoftMgmtAgent" -ClassName "CacheInfoEx" -ErrorAction Stop
-            $count = 0
-            foreach ($item in $items) {
-                if ($item.Location -and (Test-Path $item.Location)) {
-                    Remove-Item -Path $item.Location -Recurse -Force -ErrorAction SilentlyContinue; $count++
-                }
+            # CcmExec stoppen damit keine Dateien gesperrt sind
+            $svc = Get-Service -Name "CcmExec" -ErrorAction SilentlyContinue
+            $wasRunning = ($svc -ne $null -and $svc.Status -eq "Running")
+
+            if ($wasRunning) {
+                Stop-Service -Name "CcmExec" -Force -ErrorAction Stop
+                Start-Sleep -Seconds 3
             }
-            $result.Success=$true; $result.Message="$count Cache-Einträge gelöscht"
-        } catch { $result.Message="Fehler: $($_.Exception.Message)" }
+
+            # Cache-Pfad aus WMI lesen
+            $cacheConfig = Get-CimInstance -Namespace "ROOT\ccm\SoftMgmtAgent" `
+                               -ClassName "CacheConfig" -ErrorAction Stop
+            $cachePath = [string]$cacheConfig.Location
+
+            if (-not $cachePath -or -not (Test-Path $cachePath)) {
+                $cachePath = "$env:WinDir\ccmcache"
+            }
+
+            # Alle Unterordner löschen (nicht den Cache-Ordner selbst)
+            $folders = Get-ChildItem -Path $cachePath -Directory -ErrorAction SilentlyContinue
+            $count   = 0
+            foreach ($folder in $folders) {
+                try {
+                    Remove-Item -Path $folder.FullName -Recurse -Force -ErrorAction SilentlyContinue
+                    $count++
+                } catch {}
+            }
+
+            # CcmExec wieder starten
+            if ($wasRunning) {
+                Start-Service -Name "CcmExec" -ErrorAction SilentlyContinue
+            }
+
+            $result.Success = $true
+            $result.Message = "$count Cache-Ordner gelöscht. CCM-Service neu gestartet."
+        } catch {
+            # Sicherstellen dass CcmExec wieder läuft
+            try { Start-Service -Name "CcmExec" -ErrorAction SilentlyContinue } catch {}
+            $result.Message = "Cache leeren fehlgeschlagen: $($_.Exception.Message)"
+        }
     }
+
     "RepairClient" {
         try {
-            $exe = "$env:WinDir\CCM\ccmrepair.exe"
-            if (Test-Path $exe) { Start-Process -FilePath $exe -NoNewWindow; $result.Success=$true; $result.Message="ccmrepair.exe gestartet" }
-            else { $result.Message="ccmrepair.exe nicht gefunden" }
-        } catch { $result.Message=$_.Exception.Message }
+            $ccmRepair = "$env:WinDir\CCM\ccmrepair.exe"
+            if (Test-Path $ccmRepair) {
+                Start-Process -FilePath $ccmRepair -NoNewWindow
+                $result.Success = $true
+                $result.Message = "ccmrepair.exe gestartet"
+            } else {
+                $result.Message = "ccmrepair.exe nicht gefunden: $ccmRepair"
+            }
+        } catch {
+            $result.Message = "Client Repair fehlgeschlagen: $($_.Exception.Message)"
+        }
     }
+
     "ReinstallClient" {
         try {
-            $exe = "$env:WinDir\ccmsetup\ccmsetup.exe"
-            if (Test-Path $exe) { Start-Process -FilePath $exe -NoNewWindow; $result.Success=$true; $result.Message="ccmsetup.exe gestartet" }
-            else { $result.Message="ccmsetup.exe nicht gefunden" }
-        } catch { $result.Message=$_.Exception.Message }
+            $ccmSetup = "$env:WinDir\ccmsetup\ccmsetup.exe"
+            if (Test-Path $ccmSetup) {
+                Start-Process -FilePath $ccmSetup -NoNewWindow
+                $result.Success = $true
+                $result.Message = "ccmsetup.exe gestartet"
+            } else {
+                $result.Message = "ccmsetup.exe nicht gefunden"
+            }
+        } catch {
+            $result.Message = "Client Reinstall fehlgeschlagen: $($_.Exception.Message)"
+        }
     }
-    "RebootNow"    { shutdown.exe /r /t 30 /c "CMClientCenter Neustart"; $result.Success=$true; $result.Message="Neustart in 30s" }
-    "CancelReboot" { shutdown.exe /a; $result.Success=$true; $result.Message="Neustart abgebrochen" }
-    default        { $result.Message="Unbekannte Aktion: $ToolAction" }
+
+    "RebootNow" {
+        try {
+            Start-Process -FilePath "shutdown.exe" `
+                -ArgumentList "/r /t 30 /c `"CMClientCenter: Neustart ausgeloest`"" `
+                -NoNewWindow
+            $result.Success = $true
+            $result.Message = "Neustart in 30 Sekunden eingeplant"
+        } catch {
+            $result.Message = "Neustart fehlgeschlagen: $($_.Exception.Message)"
+        }
+    }
+
+    "CancelReboot" {
+        try {
+            Start-Process -FilePath "shutdown.exe" -ArgumentList "/a" -NoNewWindow
+            $result.Success = $true
+            $result.Message = "Geplanter Neustart abgebrochen"
+        } catch {
+            $result.Message = "Neustart abbrechen fehlgeschlagen: $($_.Exception.Message)"
+        }
+    }
+
+    default {
+        $result.Message = "Unbekannte Aktion: $ToolAction"
+    }
 }
+
 $result

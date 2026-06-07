@@ -72,9 +72,25 @@ public sealed partial class ToolsPage : Page
 
     private async Task RunTool(string action)
     {
-        SetButtonsEnabled(false);
-        await ViewModel.InvokeToolCommand.ExecuteAsync(action);
-        SetButtonsEnabled(true);
+        try
+        {
+            SetButtonsEnabled(false);
+            ResultBar.IsOpen = false;
+            await ViewModel.InvokeToolCommand.ExecuteAsync(action);
+        }
+        catch (Exception ex)
+        {
+            _dispatcher.TryEnqueue(() =>
+            {
+                ResultBar.Severity = Microsoft.UI.Xaml.Controls.InfoBarSeverity.Error;
+                ResultBar.Message  = $"Fehler: {ex.Message}";
+                ResultBar.IsOpen   = true;
+            });
+        }
+        finally
+        {
+            _dispatcher.TryEnqueue(() => SetButtonsEnabled(_connectionService.IsConnected));
+        }
     }
 
     private void SetButtonsEnabled(bool enabled)
