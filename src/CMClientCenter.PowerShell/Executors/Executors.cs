@@ -337,7 +337,7 @@ public class ToolsExecutor(RunspaceManager runspace, ILogger<ToolsExecutor> logg
                     if (item is System.Management.Automation.PSObject p)
                         cacheItems.Add(new CacheItem(
                             PSObjectMapper.GetString(p,"ContentId"), PSObjectMapper.GetString(p,"ContentVer"),
-                            PSObjectMapper.GetString(p,"Location"),  PSObjectMapper.GetInt(p,"SizeMB"),
+                            PSObjectMapper.GetString(p,"Location"),  PSObjectMapper.GetDouble(p,"SizeMB"),
                             PSObjectMapper.GetString(p,"LastRefTime")));
 
             var rebootSources = new List<string>();

@@ -43,7 +43,7 @@ try {
                 ContentId   = $folder.Name
                 ContentVer  = ""
                 Location    = $folder.FullName
-                SizeMB      = $sizeMB
+                SizeMB      = [int][math]::Round($sizeMB, 0)
                 LastRefTime = $lastWrite
             })
         }

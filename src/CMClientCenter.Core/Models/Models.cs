@@ -152,7 +152,7 @@ public record CacheItem(
     string ContentId,
     string ContentVersion,
     string Location,
-    int SizeMB,
+    double SizeMB,
     string LastRefTime
 );
 

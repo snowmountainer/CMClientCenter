@@ -18,7 +18,27 @@ public static class PSObjectMapper
     public static int GetInt(PSObject obj, string propertyName)
     {
         var val = Unwrap(obj.Properties[propertyName]?.Value);
-        return int.TryParse(val?.ToString(), out var v) ? v : 0;
+        if (val is null) return 0;
+        // Double/float direkt konvertieren (z.B. 42.8 → 42)
+        if (val is double d) return (int)d;
+        if (val is float f)  return (int)f;
+        if (val is long l)   return (int)l;
+        if (val is int i)    return i;
+        // String parsen — auch "42.8" funktioniert
+        if (double.TryParse(val.ToString(),
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var parsed))
+            return (int)parsed;
+        return 0;
+    }
+
+    public static double GetDouble(PSObject obj, string propertyName)
+    {
+        var val = Unwrap(obj.Properties[propertyName]?.Value);
+        if (val is null) return 0;
+        return double.TryParse(val.ToString(),
+            System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0;
     }
 
     public static long GetLong(PSObject obj, string propertyName)
