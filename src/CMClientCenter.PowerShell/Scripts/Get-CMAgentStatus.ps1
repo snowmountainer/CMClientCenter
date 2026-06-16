@@ -49,7 +49,7 @@ try {
 try {
     $cache = Get-CimInstance -Namespace "ROOT\ccm\SoftMgmtAgent" `
                  -ClassName "CacheConfig" -ErrorAction SilentlyContinue
-    if ($cache -ne $null) { $result.CacheSize = "$([math]::Round($cache.Size / 1024, 0)) MB" }
+    if ($cache -ne $null) { $result.CacheSize = "$([int]$cache.Size) MB" }
 } catch {}
 
 # Inventory Timestamps (Epoch 1970 = nie ausgeführt)
