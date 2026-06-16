@@ -149,22 +149,25 @@ public sealed partial class ToolsPage : Page
     private async void AppAction_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not MenuFlyoutItem item) return;
-        var dropDown = FindParentDropDown(item);
-        if (dropDown?.Tag is not CCMApplication app) return;
-        var action = item.Tag?.ToString() ?? "";
-        SetButtonsEnabled(false);
-        await ViewModel.InvokeApplicationCommand.ExecuteAsync((app.Id, app.Revision, action));
-        SetButtonsEnabled(true);
-    }
+        if (item.Tag is not CCMApplication app) return;
 
-    private static DropDownButton? FindParentDropDown(DependencyObject element)
-    {
-        var parent = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(element);
-        while (parent is not null)
+        // Aktion aus dem Menütext ableiten
+        var action = item.Text switch
         {
-            if (parent is DropDownButton btn) return btn;
-            parent = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(parent);
-        }
-        return null;
+            "Installieren"   => "Install",
+            "Reparieren"     => "Repair",
+            "Deinstallieren" => "Uninstall",
+            _                => ""
+        };
+        if (string.IsNullOrEmpty(action)) return;
+
+        SetButtonsEnabled(false);
+        ResultBar.IsOpen = false;
+        await ViewModel.InvokeApplicationCommand.ExecuteAsync((app.Id, app.Revision, action));
+        _dispatcher.TryEnqueue(() =>
+        {
+            ShowResult(ViewModel.LastResult);
+            SetButtonsEnabled(_connectionService.IsConnected);
+        });
     }
 }

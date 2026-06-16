@@ -61,7 +61,7 @@ try {
 try {
     $cache = Get-CimInstance -Namespace "ROOT\ccm\SoftMgmtAgent" `
                  -ClassName "CacheConfig" -ErrorAction Stop
-    $mb = [math]::Round($cache.Size / 1024, 0)
+    $mb = [int]$cache.Size
     $cacheStatus = "Healthy"
     if ($mb -le 0) { $cacheStatus = "Warning" }
     $checks.Add([PSCustomObject]@{ Category="Cache"; Name="Größe"; Status=$cacheStatus; Value="$mb MB"; Detail="" })

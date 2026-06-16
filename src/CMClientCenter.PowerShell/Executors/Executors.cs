@@ -331,28 +331,42 @@ public class ToolsExecutor(RunspaceManager runspace, ILogger<ToolsExecutor> logg
             if (r.Count == 0) return Result<CCMToolsInfo>.Failure("Keine Daten");
             var o = r[0];
 
+            // CacheItems separat abfragen — verschachtelte Arrays über WinRM unzuverlässig
             var cacheItems = new List<CacheItem>();
-            if (o.Properties["CacheItems"]?.Value is System.Collections.IEnumerable ci)
-                foreach (var item in ci)
-                    if (item is System.Management.Automation.PSObject p)
-                        cacheItems.Add(new CacheItem(
-                            PSObjectMapper.GetString(p,"ContentId"), PSObjectMapper.GetString(p,"ContentVer"),
-                            PSObjectMapper.GetString(p,"Location"),  PSObjectMapper.GetDouble(p,"SizeMB"),
-                            PSObjectMapper.GetString(p,"LastRefTime")));
+            var cacheResults = await runspace.InvokeAsync(EmbeddedScripts.Load("Get-CCMCacheItems.ps1"), ct);
+            foreach (var item in cacheResults)
+            {
+                var name = PSObjectMapper.GetString(item, "ContentId");
+                if (string.IsNullOrEmpty(name)) continue;
+                cacheItems.Add(new CacheItem(
+                    name,
+                    PSObjectMapper.GetString(item, "ContentVer"),
+                    PSObjectMapper.GetString(item, "Location"),
+                    PSObjectMapper.GetDouble(item, "SizeMB"),
+                    PSObjectMapper.GetString(item, "LastRefTime")));
+            }
 
+            // RebootSources als pipe-getrennter String serialisiert — WinRM-sicher
             var rebootSources = new List<string>();
-            if (o.Properties["RebootSources"]?.Value is System.Collections.IEnumerable rs)
-                foreach (var s in rs) if (s?.ToString() is { Length: > 0 } src) rebootSources.Add(src);
+            var raw = PSObjectMapper.GetString(o, "RebootSourcesRaw");
+            if (!string.IsNullOrEmpty(raw))
+                foreach (var s in raw.Split('|'))
+                    if (!string.IsNullOrWhiteSpace(s)) rebootSources.Add(s.Trim());
 
+            // Applications separat abfragen — verschachtelte Arrays über WinRM unzuverlässig
             var apps = new List<CCMApplication>();
-            if (o.Properties["Applications"]?.Value is System.Collections.IEnumerable al)
-                foreach (var app in al)
-                    if (app is System.Management.Automation.PSObject ap)
-                        apps.Add(new CCMApplication(
-                            PSObjectMapper.GetString(ap,"Id"),      PSObjectMapper.GetString(ap,"Revision"),
-                            PSObjectMapper.GetString(ap,"Name"),    PSObjectMapper.GetString(ap,"Publisher"),
-                            PSObjectMapper.GetString(ap,"SoftwareVersion"),
-                            PSObjectMapper.GetString(ap,"InstallState"), PSObjectMapper.GetString(ap,"ResolvedState")));
+            var appResults = await runspace.InvokeAsync(EmbeddedScripts.Load("Get-CCMApplications.ps1"), ct);
+            foreach (var app in appResults)
+            {
+                var name = PSObjectMapper.GetString(app, "Name");
+                if (string.IsNullOrEmpty(name)) continue;
+                apps.Add(new CCMApplication(
+                    PSObjectMapper.GetString(app,"Id"),      PSObjectMapper.GetString(app,"Revision"),
+                    name,                                    PSObjectMapper.GetString(app,"Publisher"),
+                    PSObjectMapper.GetString(app,"SoftwareVersion"),
+                    PSObjectMapper.GetString(app,"InstallState"), PSObjectMapper.GetString(app,"ResolvedState")));
+            }
+            apps.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase));
 
             return Result<CCMToolsInfo>.Success(new CCMToolsInfo(
                 PSObjectMapper.GetInt(o,"CacheSizeMB"), PSObjectMapper.GetInt(o,"CacheUsedMB"),

@@ -112,12 +112,12 @@
                                     <TextBlock Grid.Column="1" Text="{x:Bind InstallState}"
                                                VerticalAlignment="Center" FontSize="12"/>
                                     <DropDownButton Grid.Column="2" Content="Aktion"
-                                                    VerticalAlignment="Center" Tag="{x:Bind}">
+                                                    VerticalAlignment="Center">
                                         <DropDownButton.Flyout>
                                             <MenuFlyout>
-                                                <MenuFlyoutItem Text="Installieren"  Tag="Install"    Click="AppAction_Click"/>
-                                                <MenuFlyoutItem Text="Reparieren"    Tag="Repair"     Click="AppAction_Click"/>
-                                                <MenuFlyoutItem Text="Deinstallieren" Tag="Uninstall" Click="AppAction_Click"/>
+                                                <MenuFlyoutItem Text="Installieren"   Tag="{x:Bind}" Click="AppAction_Click" x:Name="MenuInstall"/>
+                                                <MenuFlyoutItem Text="Reparieren"     Tag="{x:Bind}" Click="AppAction_Click" x:Name="MenuRepair"/>
+                                                <MenuFlyoutItem Text="Deinstallieren" Tag="{x:Bind}" Click="AppAction_Click" x:Name="MenuUninstall"/>
                                             </MenuFlyout>
                                         </DropDownButton.Flyout>
                                     </DropDownButton>
