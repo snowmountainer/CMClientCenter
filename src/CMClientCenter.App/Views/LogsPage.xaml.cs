@@ -47,7 +47,7 @@ public sealed partial class LogsPage : Page
                         ErrorBar.Message = ViewModel.ErrorMessage ?? "";
                         break;
                     case nameof(LogsViewModel.LogFiles):
-                        // LogFiles direkt als ItemsSource — XAML DataTemplate rendert sie
+                        // LogFiles directly as ItemsSource — XAML DataTemplate renders them
                         LogFileList.ItemsSource = ViewModel.LogFiles;
                         break;
                     case nameof(LogsViewModel.Entries):

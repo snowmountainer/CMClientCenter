@@ -72,66 +72,66 @@ public sealed partial class HardwarePage : Page
 
         // System
         AddCard("System", [
-            ("Hersteller",    h.Manufacturer),
-            ("Modell",        h.Model),
-            ("Seriennummer",  h.SerialNumber),
+            ("Manufacturer",  h.Manufacturer),
+            ("Model",         h.Model),
+            ("Serial Number", h.SerialNumber),
             ("BIOS Version",  h.BIOSVersion),
-            ("BIOS Datum",    h.BIOSDate),
+            ("BIOS Date",     h.BIOSDate),
         ]);
 
         // CPU
-        AddCard("Prozessor", [
-            ("Name",          h.CPUName),
-            ("Kerne / Threads", $"{h.CPUCores} Kerne / {h.CPULogical} Threads"),
-            ("Sockel",        h.CPUSocket),
-            ("Max. Takt",     h.CPUMaxMHz > 0 ? $"{h.CPUMaxMHz} MHz" : "-"),
+        AddCard("Processor", [
+            ("Name",            h.CPUName),
+            ("Cores / Threads", $"{h.CPUCores} cores / {h.CPULogical} threads"),
+            ("Socket",          h.CPUSocket),
+            ("Max. Clock",      h.CPUMaxMHz > 0 ? $"{h.CPUMaxMHz} MHz" : "-"),
         ]);
 
         // RAM
         var ramRows = new List<(string, string)>
         {
-            ("Gesamt", $"{h.TotalRAMGB} GB")
+            ("Total", $"{h.TotalRAMGB} GB")
         };
         foreach (var slot in h.RAMSlots)
             ramRows.Add(($"Slot {slot.Slot}", $"{slot.SizeGB} GB  {slot.SpeedMHz} MHz  {slot.Manufacturer}".Trim()));
-        AddCard("Arbeitsspeicher", ramRows);
+        AddCard("Memory", ramRows);
 
         // GPU
         if (!string.IsNullOrEmpty(h.GPUName))
-            AddCard("Grafik", [
+            AddCard("Graphics", [
                 ("GPU",    h.GPUName),
                 ("VRAM",   h.GPUVRAMMB > 0 ? $"{h.GPUVRAMMB} MB" : "-"),
             ]);
 
-        // Betriebssystem
-        AddCard("Betriebssystem", [
-            ("Name",          h.OSCaption),
-            ("Build",         h.OSBuild),
-            ("Architektur",   h.OSArch),
-            ("Installiert",   h.OSInstall),
-            ("Letzter Start", h.LastBoot),
+        // Operating System
+        AddCard("Operating System", [
+            ("Name",         h.OSCaption),
+            ("Build",        h.OSBuild),
+            ("Architecture", h.OSArch),
+            ("Installed",    h.OSInstall),
+            ("Last Boot",    h.LastBoot),
         ]);
 
-        // Laufwerke
+        // Drives
         if (h.Disks.Count > 0)
         {
             var diskRows = new List<(string, string)>();
             foreach (var d in h.Disks)
             {
                 var label = string.IsNullOrEmpty(d.Label) ? d.DriveLetter : $"{d.DriveLetter} ({d.Label})";
-                diskRows.Add((label, $"{d.FreeGB} GB frei von {d.TotalGB} GB ({d.FreePct}%)  [{d.FileSystem}]"));
+                diskRows.Add((label, $"{d.FreeGB} GB free of {d.TotalGB} GB ({d.FreePct}%)  [{d.FileSystem}]"));
             }
-            AddCardWithBars("Laufwerke", h.Disks);
+            AddCardWithBars("Drives", h.Disks);
         }
 
-        // Netzwerk
+        // Network
         if (h.NICs.Count > 0)
         {
             var nicRows = new List<(string, string)>();
             foreach (var n in h.NICs)
                 nicRows.Add((n.Description.Length > 35 ? n.Description[..35] + "…" : n.Description,
                     $"{n.IPAddress}  {n.MACAddress}"));
-            AddCard("Netzwerk", nicRows);
+            AddCard("Network", nicRows);
         }
     }
 
@@ -158,7 +158,7 @@ public sealed partial class HardwarePage : Page
         foreach (var d in disks)
         {
             var label = string.IsNullOrEmpty(d.Label) ? d.DriveLetter : $"{d.DriveLetter}  {d.Label}";
-            var info  = $"{d.FreeGB} GB frei  /  {d.TotalGB} GB  [{d.FileSystem}]";
+            var info  = $"{d.FreeGB} GB free  /  {d.TotalGB} GB  [{d.FileSystem}]";
 
             var col = new StackPanel { Margin = new Thickness(0, 6, 0, 6), Spacing = 4 };
 
@@ -178,7 +178,7 @@ public sealed partial class HardwarePage : Page
             };
             var lblPct   = new TextBlock
             {
-                Text              = $"{d.FreePct}% frei",
+                Text              = $"{d.FreePct}% free",
                 FontSize          = 11,
                 VerticalAlignment = VerticalAlignment.Center
             };
@@ -191,7 +191,7 @@ public sealed partial class HardwarePage : Page
             hdr.Children.Add(lblPct);
             col.Children.Add(hdr);
 
-            // Fortschrittsbalken (benutzt = rot/orange/grün)
+            // Progress bar (used = red/orange/green)
             var bar = new ProgressBar
             {
                 Value   = 100 - d.FreePct,

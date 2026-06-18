@@ -52,7 +52,7 @@ public sealed partial class DashboardPage : Page
             });
         };
 
-        // ConnectionStateChanged — wird bei jedem Connect/Disconnect gefeuert
+        // ConnectionStateChanged — fires on every Connect/Disconnect
         _connectionService.ConnectionStateChanged += OnConnectionStateChanged;
 
         Loaded += async (_, _) =>
@@ -61,7 +61,7 @@ public sealed partial class DashboardPage : Page
                 await ViewModel.RefreshCommand.ExecuteAsync(null);
         };
 
-        // Aufräumen wenn Page entladen wird
+        // Clean up when the page is unloaded
         Unloaded += (_, _) =>
             _connectionService.ConnectionStateChanged -= OnConnectionStateChanged;
     }
@@ -70,7 +70,7 @@ public sealed partial class DashboardPage : Page
     {
         if (connResult.IsConnected)
         {
-            // Kurz warten bis Runspace vollständig initialisiert ist
+            // Brief wait until the runspace is fully initialized
             await Task.Delay(300);
             await ViewModel.RefreshCommand.ExecuteAsync(null);
         }
@@ -86,7 +86,7 @@ public sealed partial class DashboardPage : Page
 
         if (string.IsNullOrEmpty(a.ClientVersion))
         {
-            TxtVersion.Text = "Kein Zugriff";
+            TxtVersion.Text = "No access";
             DiagBar.IsOpen  = true;
             DiagBar.Message = a.DiagInfo;
         }
@@ -107,8 +107,8 @@ public sealed partial class DashboardPage : Page
             CMClientState.Healthy      => (new SolidColorBrush(Colors.ForestGreen), "Healthy"),
             CMClientState.Warning      => (new SolidColorBrush(Colors.DarkOrange),  "Warning"),
             CMClientState.Error        => (new SolidColorBrush(Colors.Crimson),     "Error"),
-            CMClientState.NotInstalled => (new SolidColorBrush(Colors.Gray),        "Nicht installiert"),
-            _                          => (new SolidColorBrush(Colors.Gray),        "Unbekannt")
+            CMClientState.NotInstalled => (new SolidColorBrush(Colors.Gray),        "Not installed"),
+            _                          => (new SolidColorBrush(Colors.Gray),        "Unknown")
         };
     }
 
@@ -116,7 +116,7 @@ public sealed partial class DashboardPage : Page
     {
         if (h is null) { ResetHardwareFields(); return; }
         TxtModel.Text = $"{h.Manufacturer} {h.Model}".Trim();
-        TxtCPU.Text   = $"{h.CPUName} ({h.CPUCores} Kerne)";
+        TxtCPU.Text   = $"{h.CPUName} ({h.CPUCores} cores)";
         TxtRAM.Text   = $"{h.TotalRAMGB} GB";
         TxtOS.Text    = $"{h.OSCaption} (Build {h.OSBuild})";
                             if (!string.IsNullOrEmpty(h.LastBoot)) TxtOS.Text += $"  |  Boot: {h.LastBoot}";

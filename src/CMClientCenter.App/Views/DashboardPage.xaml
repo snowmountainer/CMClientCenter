@@ -13,12 +13,12 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="Dashboard" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center"/>
-                <Button Grid.Column="1" Content="Aktualisieren" Command="{x:Bind ViewModel.RefreshCommand}"/>
+                <Button Grid.Column="1" Content="Refresh" Command="{x:Bind ViewModel.RefreshCommand}"/>
             </Grid>
 
             <ProgressBar IsIndeterminate="True" x:Name="LoadingBar" Visibility="Collapsed"/>
             <InfoBar x:Name="ErrorBar" IsOpen="False" Severity="Error" IsClosable="True"/>
-            <InfoBar x:Name="DiagBar" IsOpen="False" Severity="Informational" IsClosable="True" Title="CCM Diagnose"/>
+            <InfoBar x:Name="DiagBar" IsOpen="False" Severity="Informational" IsClosable="True" Title="CCM Diagnostics"/>
 
             <!-- CM Agent Card -->
             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
@@ -48,7 +48,7 @@
                         <TextBlock Grid.Row="2" Grid.Column="1" x:Name="TxtSiteCode"    Text="-"/>
                         <TextBlock Grid.Row="3" Grid.Column="0" Text="Management Point" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                         <TextBlock Grid.Row="3" Grid.Column="1" x:Name="TxtMP"          Text="-"/>
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Letztes HW-Inv."  Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Last HW Inv."  Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                         <TextBlock Grid.Row="4" Grid.Column="1" x:Name="TxtHWInv"       Text="-"/>
                         <TextBlock Grid.Row="5" Grid.Column="0" Text="Cache"            Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                         <TextBlock Grid.Row="5" Grid.Column="1" x:Name="TxtCache"       Text="-"/>
@@ -70,13 +70,13 @@
                         <Grid.RowDefinitions>
                             <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Modell"           Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Model"           Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                         <TextBlock Grid.Row="0" Grid.Column="1" x:Name="TxtModel"       Text="-"/>
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="CPU"              Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                         <TextBlock Grid.Row="1" Grid.Column="1" x:Name="TxtCPU"         Text="-"/>
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="RAM"              Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                         <TextBlock Grid.Row="2" Grid.Column="1" x:Name="TxtRAM"         Text="-"/>
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Betriebssystem"   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Operating System"   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                         <TextBlock Grid.Row="3" Grid.Column="1" x:Name="TxtOS"          Text="-"/>
                     </Grid>
                 </StackPanel>

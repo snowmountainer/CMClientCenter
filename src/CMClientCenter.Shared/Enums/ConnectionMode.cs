@@ -4,7 +4,7 @@ public enum ConnectionMode
 {
     /// <summary>Automatisch erkennen (localhost vs. Remote)</summary>
     AutoDetect,
-    /// <summary>Lokale Ausführung ohne WinRM</summary>
+    /// <summary>Local execution without WinRM</summary>
     Local,
     /// <summary>Remote via WinRM / PSSession</summary>
     Remote

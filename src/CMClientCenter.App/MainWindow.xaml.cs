@@ -12,7 +12,7 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         ExtendsContentIntoTitleBar = true;
 
-        // Standard-Seite laden
+        // Load default page
         ContentFrame.Navigate(typeof(DashboardPage));
         NavView.SelectedItem = NavView.MenuItems[0];
     }

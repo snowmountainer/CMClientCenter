@@ -1,5 +1,5 @@
 # Get-CCMCacheItems.ps1 — PS 5.1 kompatibel
-# Gibt CacheItems als flache Liste zurück — verschachtelte Arrays über WinRM unzuverlässig
+# Returns CacheItems as a flat list — nested arrays are unreliable over WinRM
 
 try {
     $cache = Get-CimInstance -Namespace "ROOT\ccm\SoftMgmtAgent" -ClassName "CacheConfig" -ErrorAction Stop

@@ -18,7 +18,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <TextBlock Text="Hardware" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center"/>
-            <Button Grid.Column="1" x:Name="RefreshButton" Content="Aktualisieren" VerticalAlignment="Center"/>
+            <Button Grid.Column="1" x:Name="RefreshButton" Content="Refresh" VerticalAlignment="Center"/>
         </Grid>
 
         <ProgressBar Grid.Row="1" x:Name="LoadingBar" IsIndeterminate="True" Visibility="Collapsed"/>

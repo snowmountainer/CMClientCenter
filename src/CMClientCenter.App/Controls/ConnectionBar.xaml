@@ -19,17 +19,17 @@
                      x:Name="StatusDot" Fill="Gray" VerticalAlignment="Center"/>
 
             <TextBox Grid.Column="1" x:Name="HostBox"
-                     PlaceholderText="Hostname oder IP-Adresse..."
+                     PlaceholderText="Hostname or IP address..."
                      Text="{x:Bind ViewModel.TargetHost, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                      KeyDown="HostBox_KeyDown" VerticalAlignment="Center"/>
 
-            <Button Grid.Column="2" Content="Verbinden"
+            <Button Grid.Column="2" Content="Connect"
                     Command="{x:Bind ViewModel.ConnectCommand}"
                     Style="{StaticResource AccentButtonStyle}"
                     VerticalAlignment="Center"/>
 
             <Button Grid.Column="3" x:Name="DisconnectButton"
-                    Content="Trennen"
+                    Content="Disconnect"
                     Command="{x:Bind ViewModel.DisconnectCommand}"
                     Visibility="Collapsed" VerticalAlignment="Center"/>
 
@@ -43,7 +43,7 @@
                           Width="20" Height="20" Margin="8,0"/>
         </Grid>
 
-        <!-- Fehleranzeige direkt unter der ConnectionBar -->
+        <!-- Error display directly below the ConnectionBar -->
         <InfoBar x:Name="ErrorBar"
                  IsOpen="False"
                  Severity="Error"

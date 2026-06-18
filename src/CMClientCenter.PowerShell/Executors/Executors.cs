@@ -21,7 +21,7 @@ public class HardwareExecutor(RunspaceManager runspace, ILogger<HardwareExecutor
                 EmbeddedScripts.Load("Get-HardwareInfo.ps1"), ct);
 
             if (results.Count == 0)
-                return Result<HardwareInfo>.Failure("Keine Hardware-Daten erhalten");
+                return Result<HardwareInfo>.Failure("No hardware data received");
 
             var obj = results[0];
 
@@ -145,7 +145,7 @@ public class ActionExecutor(RunspaceManager runspace, ILogger<ActionExecutor> lo
     public async Task<Result> TriggerAsync(CMActionType action, CancellationToken ct = default)
     {
         if (!_scheduleIds.TryGetValue(action, out var scheduleId))
-            return Result.Failure($"Unbekannte Action: {action}");
+            return Result.Failure($"Unknown action: {action}");
 
         try
         {
@@ -328,10 +328,10 @@ public class ToolsExecutor(RunspaceManager runspace, ILogger<ToolsExecutor> logg
         try
         {
             var r = await runspace.InvokeAsync(EmbeddedScripts.Load("Get-CCMTools.ps1"), ct);
-            if (r.Count == 0) return Result<CCMToolsInfo>.Failure("Keine Daten");
+            if (r.Count == 0) return Result<CCMToolsInfo>.Failure("No data");
             var o = r[0];
 
-            // CacheItems separat abfragen — verschachtelte Arrays über WinRM unzuverlässig
+            // Query CacheItems separately — nested arrays are unreliable over WinRM
             var cacheItems = new List<CacheItem>();
             var cacheResults = await runspace.InvokeAsync(EmbeddedScripts.Load("Get-CCMCacheItems.ps1"), ct);
             foreach (var item in cacheResults)
@@ -346,14 +346,14 @@ public class ToolsExecutor(RunspaceManager runspace, ILogger<ToolsExecutor> logg
                     PSObjectMapper.GetString(item, "LastRefTime")));
             }
 
-            // RebootSources als pipe-getrennter String serialisiert — WinRM-sicher
+            // RebootSources serialized as a pipe-delimited string — WinRM-safe
             var rebootSources = new List<string>();
             var raw = PSObjectMapper.GetString(o, "RebootSourcesRaw");
             if (!string.IsNullOrEmpty(raw))
                 foreach (var s in raw.Split('|'))
                     if (!string.IsNullOrWhiteSpace(s)) rebootSources.Add(s.Trim());
 
-            // Applications separat abfragen — verschachtelte Arrays über WinRM unzuverlässig
+            // Query Applications separately — nested arrays are unreliable over WinRM
             var apps = new List<CCMApplication>();
             var appResults = await runspace.InvokeAsync(EmbeddedScripts.Load("Get-CCMApplications.ps1"), ct);
             foreach (var app in appResults)

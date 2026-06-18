@@ -19,11 +19,11 @@ public class CMAgentExecutor(RunspaceManager runspace, ILogger<CMAgentExecutor> 
                 EmbeddedScripts.Load("Get-CMAgentStatus.ps1"), ct);
 
             if (results.Count == 0)
-                return Result<CMAgentInfo>.Failure("Kein Ergebnis vom Script");
+                return Result<CMAgentInfo>.Failure("No result from script");
 
             var obj = results[0];
 
-            // DiagInfo für Debugging loggen
+            // Log DiagInfo for debugging
             var diagInfo = PSObjectMapper.GetString(obj, "DiagInfo");
             if (!string.IsNullOrEmpty(diagInfo))
                 logger.LogInformation("CCM Agent DiagInfo: {DiagInfo}", diagInfo);

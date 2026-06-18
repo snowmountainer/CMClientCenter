@@ -83,7 +83,7 @@ public sealed partial class ToolsPage : Page
             _dispatcher.TryEnqueue(() =>
             {
                 ResultBar.Severity = Microsoft.UI.Xaml.Controls.InfoBarSeverity.Error;
-                ResultBar.Message  = $"Fehler: {ex.Message}";
+                ResultBar.Message  = $"Error: {ex.Message}";
                 ResultBar.IsOpen   = true;
             });
         }
@@ -120,15 +120,15 @@ public sealed partial class ToolsPage : Page
         CacheSize.Text        = $"{info.CacheSizeMB} MB";
         CacheUsed.Text        = $"{info.CacheUsedMB} MB";
         CacheFree.Text        = $"{info.CacheFreeMB} MB";
-        CacheItemsHeader.Text = $"Cache-Einträge ({info.CacheItems.Count})";
+        CacheItemsHeader.Text = $"Cache Items ({info.CacheItems.Count})";
         CacheItemsList.ItemsSource = info.CacheItems;
 
         CCMSetupBar.IsOpen = info.CCMSetupRunning;
 
-        RebootStatus.Text       = info.RebootPending ? "⚠ Neustart ausstehend" : "✓ Kein Neustart erforderlich";
+        RebootStatus.Text       = info.RebootPending ? "⚠ Restart pending" : "✓ No restart required";
         RebootStatus.Foreground = new SolidColorBrush(info.RebootPending ? Colors.DarkOrange : Colors.ForestGreen);
         RebootSources.Text      = info.RebootSources.Count > 0
-            ? "Quellen: " + string.Join(", ", info.RebootSources) : "";
+            ? "Sources: " + string.Join(", ", info.RebootSources) : "";
 
         AppsHeader.Text      = $"Applications ({info.Applications.Count})";
         AppsList.ItemsSource = info.Applications;
@@ -137,6 +137,7 @@ public sealed partial class ToolsPage : Page
     private void ResetUI()
     {
         CachePath.Text = CacheSize.Text = CacheUsed.Text = CacheFree.Text = "-";
+        CacheItemsHeader.Text = "Cache Items (0)";
         CacheItemsList.ItemsSource = null;
         RebootStatus.Text = "-";
         RebootSources.Text = "";
@@ -151,13 +152,13 @@ public sealed partial class ToolsPage : Page
         if (sender is not MenuFlyoutItem item) return;
         if (item.Tag is not CCMApplication app) return;
 
-        // Aktion aus dem Menütext ableiten
+        // Derive the action from the menu text
         var action = item.Text switch
         {
-            "Installieren"   => "Install",
-            "Reparieren"     => "Repair",
-            "Deinstallieren" => "Uninstall",
-            _                => ""
+            "Install"   => "Install",
+            "Repair"    => "Repair",
+            "Uninstall" => "Uninstall",
+            _           => ""
         };
         if (string.IsNullOrEmpty(action)) return;
 

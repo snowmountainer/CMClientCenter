@@ -112,13 +112,13 @@ public record CMAction(
 {
     public static IReadOnlyList<CMAction> AllActions =>
     [
-        new("Machine Policy Retrieval",    CMActionType.MachinePolicy,           "Ruft Machine Policies vom MP ab"),
-        new("Discovery Data Collection",   CMActionType.DiscoveryDataCollection,  "Sendet Discovery-Daten an den Site Server"),
-        new("Software Inventory",          CMActionType.SoftwareInventory,        "Führt Software-Inventur durch"),
-        new("Hardware Inventory",          CMActionType.HardwareInventory,        "Führt Hardware-Inventur durch"),
-        new("Software Updates Deployment", CMActionType.UpdateDeployment,         "Prüft und installiert Updates"),
-        new("Software Updates Scan",       CMActionType.UpdateScan,               "Scannt nach verfügbaren Updates"),
-        new("Application Deployment",      CMActionType.ApplicationDeployment,    "Wertet Application Deployments aus"),
+        new("Machine Policy Retrieval",    CMActionType.MachinePolicy,           "Retrieves machine policies from the MP"),
+        new("Discovery Data Collection",   CMActionType.DiscoveryDataCollection,  "Sends discovery data to the site server"),
+        new("Software Inventory",          CMActionType.SoftwareInventory,        "Runs a software inventory scan"),
+        new("Hardware Inventory",          CMActionType.HardwareInventory,        "Runs a hardware inventory scan"),
+        new("Software Updates Deployment", CMActionType.UpdateDeployment,         "Checks for and installs updates"),
+        new("Software Updates Scan",       CMActionType.UpdateScan,               "Scans for available updates"),
+        new("Application Deployment",      CMActionType.ApplicationDeployment,    "Evaluates application deployments"),
     ];
 }
 

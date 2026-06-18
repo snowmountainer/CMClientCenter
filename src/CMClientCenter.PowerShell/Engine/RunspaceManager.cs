@@ -40,7 +40,7 @@ public class RunspaceManager(ILogger<RunspaceManager> logger)
         string script, CancellationToken ct = default)
     {
         if (_current is null || !_current.IsOpen)
-            throw new InvalidOperationException("Kein aktiver Runspace. Bitte zuerst verbinden.");
+            throw new InvalidOperationException("No active runspace. Please connect first.");
 
         await _lock.WaitAsync(ct);
         try

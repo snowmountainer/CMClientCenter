@@ -32,7 +32,7 @@ try {
     $result.ClientState = if ($result.ClientVersion) { "Healthy" } else { "Unknown" }
 } catch {}
 
-# MP + SiteCode aus SMS_MPInformation (primäre Quelle für Site Code auf diesem System)
+# MP + SiteCode from SMS_MPInformation (primary source for Site Code on this system)
 try {
     $mpInfo = Get-CimInstance -Namespace "ROOT\ccm\locationservices" `
                   -ClassName "SMS_MPInformation" -ErrorAction Stop | Select-Object -First 1
@@ -52,7 +52,7 @@ try {
     if ($cache -ne $null) { $result.CacheSize = "$([int]$cache.Size) MB" }
 } catch {}
 
-# Inventory Timestamps (Epoch 1970 = nie ausgeführt)
+# Inventory timestamps (Epoch 1970 = never run)
 try {
     $statuses = Get-CimInstance -Namespace "ROOT\ccm\invagt" `
                     -ClassName "InventoryActionStatus" -ErrorAction SilentlyContinue

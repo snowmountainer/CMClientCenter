@@ -108,8 +108,8 @@ public partial class ActionsViewModel(IActionService actionService) : Observable
         IsBusy = true; LastResult = null;
         var result = await actionService.TriggerActionAsync(action.ActionType);
         LastResult = result.IsSuccess
-            ? $"✓ {action.Name} erfolgreich ausgelöst"
-            : $"✗ Fehler: {result.ErrorMessage}";
+            ? $"✓ {action.Name} triggered successfully"
+            : $"✗ Error: {result.ErrorMessage}";
         IsBusy = false;
     }
 }
@@ -208,7 +208,7 @@ public partial class ToolsViewModel(IToolsService toolsService) : ObservableObje
     {
         IsBusy = true; LastResult = null;
         var result = await toolsService.InvokeToolAsync(action);
-        LastResult = result.IsSuccess ? $"✓ Erfolgreich" : $"✗ {result.ErrorMessage}";
+        LastResult = result.IsSuccess ? $"✓ Success" : $"✗ {result.ErrorMessage}";
         IsBusy = false;
         if (result.IsSuccess) await RefreshCommand.ExecuteAsync(null);
     }
@@ -218,7 +218,7 @@ public partial class ToolsViewModel(IToolsService toolsService) : ObservableObje
     {
         IsBusy = true; LastResult = null;
         var result = await toolsService.InvokeApplicationAsync(p.id, p.rev, p.action);
-        LastResult = result.IsSuccess ? $"✓ {p.action} gestartet" : $"✗ {result.ErrorMessage}";
+        LastResult = result.IsSuccess ? $"✓ {p.action} started" : $"✗ {result.ErrorMessage}";
         IsBusy = false;
     }
 }

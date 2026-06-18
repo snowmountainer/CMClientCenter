@@ -22,7 +22,7 @@ try {
     $result.CachePath   = $cachePath
     $result.CacheSizeMB = $configuredMB
 
-    # Tatsächliche Disk-Nutzung direkt aus dem Dateisystem lesen (nicht WMI)
+    # Read actual disk usage directly from the file system (not WMI)
     $usedBytes = 0
 
     if (Test-Path $cachePath) {
@@ -36,7 +36,7 @@ try {
             $usedBytes += $folderSize
         }
 
-        # Dateien direkt im Cache-Root
+        # Files directly in the cache root
         $rootFiles = Get-ChildItem -Path $cachePath -File -ErrorAction SilentlyContinue
         foreach ($file in $rootFiles) {
             $usedBytes += $file.Length
@@ -55,7 +55,7 @@ try {
     $result.CacheFreeMB = $configuredMB - $usedMB
 
 } catch {
-    $result.CachePath = "Fehler: $($_.Exception.Message)"
+    $result.CachePath = "Error: $($_.Exception.Message)"
 }
 
 # ── Reboot Pending ─────────────────────────────────────────────────────────
@@ -82,7 +82,7 @@ try {
 # Pipe-getrennt serialisieren — WinRM-sicher, kein verschachteltes Array
 $result.RebootSourcesRaw = $sources -join "|"
 
-# ── CCMSetup läuft? ────────────────────────────────────────────────────────
+# ── Is CCMSetup running? ──────────────────────────────────────────────────
 $result.CCMSetupRunning = ($null -ne (Get-Process -Name "ccmsetup" -ErrorAction SilentlyContinue))
 
 $result

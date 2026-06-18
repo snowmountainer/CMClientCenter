@@ -67,11 +67,11 @@ public sealed partial class ActionsPage : Page
         }
         catch (Exception ex)
         {
-            AddLog($"{DateTime.Now:HH:mm:ss}  ✗ Unerwarteter Fehler: {ex.Message}");
+            AddLog($"{DateTime.Now:HH:mm:ss}  ✗ Unexpected error: {ex.Message}");
         }
         finally
         {
-            // UI-Thread sicherstellen
+            // Ensure we're back on the UI thread
             _dispatcher.TryEnqueue(() =>
                 ActionsList.IsEnabled = _connectionService.IsConnected);
         }

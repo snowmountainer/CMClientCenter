@@ -10,6 +10,6 @@ public sealed partial class CredentialsDialog : ContentDialog
     public CredentialsDialog(string hostname)
     {
         InitializeComponent();
-        HostInfo.Text = $"Verbindung zu: {hostname}";
+        HostInfo.Text = $"Connecting to: {hostname}";
     }
 }

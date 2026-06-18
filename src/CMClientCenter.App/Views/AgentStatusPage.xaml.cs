@@ -91,7 +91,7 @@ public sealed partial class AgentStatusPage : Page
 
         foreach (var group in ViewModel.GroupedChecks)
         {
-            // Kategorie-Header
+            // Category header
             var header = new TextBlock
             {
                 Text  = group.Key,
@@ -100,7 +100,7 @@ public sealed partial class AgentStatusPage : Page
             };
             ChecksPanel.Children.Add(header);
 
-            // Card mit allen Checks der Kategorie
+            // Card with all checks of this category
             var card = new Border
             {
                 Background    = (Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"],
@@ -118,7 +118,7 @@ public sealed partial class AgentStatusPage : Page
                 var check = items[i];
                 var row   = BuildCheckRow(check);
 
-                // Trennlinie außer bei letztem Element
+                // Divider except for the last item
                 if (i < items.Count - 1)
                 {
                     var border = new Border
@@ -148,7 +148,7 @@ public sealed partial class AgentStatusPage : Page
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-        // Status-Indikator
+        // Status indicator
         var dot = new Ellipse
         {
             Width  = 10,
@@ -184,7 +184,7 @@ public sealed partial class AgentStatusPage : Page
         }
         Grid.SetColumn(valuePanel, 2);
 
-        // Status-Label
+        // Status label
         var statusLabel = new Border
         {
             Background    = StatusColor(check.Status),

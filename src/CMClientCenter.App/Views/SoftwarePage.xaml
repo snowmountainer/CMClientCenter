@@ -28,7 +28,7 @@
                                Foreground="White" FontSize="12" FontWeight="SemiBold"/>
                 </Border>
             </StackPanel>
-            <Button Grid.Column="1" Content="Aktualisieren"
+            <Button Grid.Column="1" Content="Refresh"
                     x:Name="RefreshButton" VerticalAlignment="Center"/>
         </Grid>
 
@@ -39,7 +39,7 @@
 
         <TextBox Grid.Row="3"
                  x:Name="FilterBox"
-                 PlaceholderText="Filter (Name, Hersteller, Version…)"
+                 PlaceholderText="Filter (name, publisher, version…)"
                  TextChanged="FilterBox_TextChanged"/>
 
         <ListView Grid.Row="4" x:Name="SoftwareList" SelectionMode="Single">
@@ -61,10 +61,10 @@
                         <TextBlock Grid.Column="1" Text="Version"
                                    Style="{StaticResource CaptionTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                        <TextBlock Grid.Column="2" Text="Hersteller"
+                        <TextBlock Grid.Column="2" Text="Publisher"
                                    Style="{StaticResource CaptionTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                        <TextBlock Grid.Column="3" Text="Installiert"
+                        <TextBlock Grid.Column="3" Text="Installed"
                                    Style="{StaticResource CaptionTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                     </Grid>

@@ -1,5 +1,5 @@
-# Get-CCMApplications.ps1 — Separates Script für Applications
-# PS 5.1 kompatibel
+# Get-CCMApplications.ps1 — Separate script for Applications
+# PS 5.1 compatible
 
 try {
     $apps = Get-CimInstance -Namespace "ROOT\ccm\clientsdk" -ClassName "CCM_Application" -ErrorAction SilentlyContinue

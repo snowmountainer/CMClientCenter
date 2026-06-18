@@ -1,5 +1,5 @@
-# Invoke-CCMTool.ps1 — PS 5.1 kompatibel
-# $ToolAction wird vor dem Script gesetzt
+# Invoke-CCMTool.ps1 — PS 5.1 compatible
+# $ToolAction is set by the caller before the script runs
 
 $result = [PSCustomObject]@{ Success = $false; Message = "" }
 
@@ -7,7 +7,7 @@ switch ($ToolAction) {
 
     "ClearCache" {
         try {
-            # CcmExec stoppen damit keine Dateien gesperrt sind
+            # Stop CcmExec so no files are locked
             $svc = Get-Service -Name "CcmExec" -ErrorAction SilentlyContinue
             $wasRunning = ($svc -ne $null -and $svc.Status -eq "Running")
 
@@ -16,7 +16,7 @@ switch ($ToolAction) {
                 Start-Sleep -Seconds 3
             }
 
-            # Cache-Pfad aus WMI lesen
+            # Read cache path from WMI
             $cacheConfig = Get-CimInstance -Namespace "ROOT\ccm\SoftMgmtAgent" `
                                -ClassName "CacheConfig" -ErrorAction Stop
             $cachePath = [string]$cacheConfig.Location
@@ -25,7 +25,7 @@ switch ($ToolAction) {
                 $cachePath = "$env:WinDir\ccmcache"
             }
 
-            # Alle Unterordner löschen (nicht den Cache-Ordner selbst)
+            # Delete all subfolders (not the cache folder itself)
             $folders = Get-ChildItem -Path $cachePath -Directory -ErrorAction SilentlyContinue
             $count   = 0
             foreach ($folder in $folders) {
@@ -35,17 +35,17 @@ switch ($ToolAction) {
                 } catch {}
             }
 
-            # CcmExec wieder starten
+            # Restart CcmExec
             if ($wasRunning) {
                 Start-Service -Name "CcmExec" -ErrorAction SilentlyContinue
             }
 
             $result.Success = $true
-            $result.Message = "$count Cache-Ordner gelöscht. CCM-Service neu gestartet."
+            $result.Message = "$count cache folder(s) deleted. CCM service restarted."
         } catch {
-            # Sicherstellen dass CcmExec wieder läuft
+            # Ensure CcmExec is running again
             try { Start-Service -Name "CcmExec" -ErrorAction SilentlyContinue } catch {}
-            $result.Message = "Cache leeren fehlgeschlagen: $($_.Exception.Message)"
+            $result.Message = "Clear cache failed: $($_.Exception.Message)"
         }
     }
 
@@ -55,12 +55,12 @@ switch ($ToolAction) {
             if (Test-Path $ccmRepair) {
                 Start-Process -FilePath $ccmRepair -NoNewWindow
                 $result.Success = $true
-                $result.Message = "ccmrepair.exe gestartet"
+                $result.Message = "ccmrepair.exe started"
             } else {
-                $result.Message = "ccmrepair.exe nicht gefunden: $ccmRepair"
+                $result.Message = "ccmrepair.exe not found: $ccmRepair"
             }
         } catch {
-            $result.Message = "Client Repair fehlgeschlagen: $($_.Exception.Message)"
+            $result.Message = "Client repair failed: $($_.Exception.Message)"
         }
     }
 
@@ -70,24 +70,24 @@ switch ($ToolAction) {
             if (Test-Path $ccmSetup) {
                 Start-Process -FilePath $ccmSetup -NoNewWindow
                 $result.Success = $true
-                $result.Message = "ccmsetup.exe gestartet"
+                $result.Message = "ccmsetup.exe started"
             } else {
-                $result.Message = "ccmsetup.exe nicht gefunden"
+                $result.Message = "ccmsetup.exe not found"
             }
         } catch {
-            $result.Message = "Client Reinstall fehlgeschlagen: $($_.Exception.Message)"
+            $result.Message = "Client reinstall failed: $($_.Exception.Message)"
         }
     }
 
     "RebootNow" {
         try {
             Start-Process -FilePath "shutdown.exe" `
-                -ArgumentList "/r /t 30 /c `"CMClientCenter: Neustart ausgeloest`"" `
+                -ArgumentList "/r /t 30 /c `"CMClientCenter: Reboot triggered`"" `
                 -NoNewWindow
             $result.Success = $true
-            $result.Message = "Neustart in 30 Sekunden eingeplant"
+            $result.Message = "Reboot scheduled in 30 seconds"
         } catch {
-            $result.Message = "Neustart fehlgeschlagen: $($_.Exception.Message)"
+            $result.Message = "Reboot failed: $($_.Exception.Message)"
         }
     }
 
@@ -95,14 +95,14 @@ switch ($ToolAction) {
         try {
             Start-Process -FilePath "shutdown.exe" -ArgumentList "/a" -NoNewWindow
             $result.Success = $true
-            $result.Message = "Geplanter Neustart abgebrochen"
+            $result.Message = "Scheduled reboot cancelled"
         } catch {
-            $result.Message = "Neustart abbrechen fehlgeschlagen: $($_.Exception.Message)"
+            $result.Message = "Cancel reboot failed: $($_.Exception.Message)"
         }
     }
 
     default {
-        $result.Message = "Unbekannte Aktion: $ToolAction"
+        $result.Message = "Unknown action: $ToolAction"
     }
 }
 

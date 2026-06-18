@@ -5,7 +5,7 @@ namespace CMClientCenter.PowerShell.Helpers;
 
 public static class PSObjectMapper
 {
-    /// <summary>Unwrapped den Wert aus einem PSObject falls nötig.</summary>
+    /// <summary>Unwraps the value from a PSObject if needed.</summary>
     private static object? Unwrap(object? val) =>
         val is PSObject pso ? pso.BaseObject : val;
 

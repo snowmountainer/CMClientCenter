@@ -9,7 +9,7 @@
         <TextBlock Text="CM Actions" Style="{StaticResource TitleTextBlockStyle}"/>
 
         <InfoBar x:Name="NotConnectedBar" IsOpen="True" IsClosable="False"
-                 Severity="Warning" Message="Bitte zuerst mit einem Computer verbinden."/>
+                 Severity="Warning" Message="Please connect to a computer first."/>
 
         <InfoBar x:Name="ResultBar" IsOpen="False" IsClosable="True"/>
 
@@ -32,7 +32,7 @@
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                            FontSize="12"/>
                             </StackPanel>
-                            <Button Grid.Column="1" Content="Auslösen"
+                            <Button Grid.Column="1" Content="Trigger"
                                     VerticalAlignment="Center" MinWidth="100"
                                     Tag="{x:Bind}"
                                     Click="ActionButton_Click"/>
@@ -55,12 +55,12 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Ausführungs-Log"
+                    <TextBlock Text="Execution Log"
                                Style="{StaticResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                VerticalAlignment="Center"/>
                     <Button Grid.Column="1" x:Name="ClearLogButton"
-                            Content="Leeren" FontSize="11" Padding="8,4"/>
+                            Content="Clear" FontSize="11" Padding="8,4"/>
                 </Grid>
                 <ScrollViewer Grid.Row="1">
                     <TextBlock x:Name="LogText" FontFamily="Consolas"

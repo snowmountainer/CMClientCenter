@@ -74,7 +74,7 @@ public class RemoteRunspace(TargetComputer target, string? password, ILogger log
         {
             logger.LogInformation("Opening WinRM connection to {Host}", target.Hostname);
 
-            // TrustedHosts prüfen und ggf. ergänzen (lokaler PS-Runspace)
+            // Check TrustedHosts and add the host if needed (local PS runspace)
             await EnsureTrustedHostAsync(target.Hostname, ct);
 
             var info = BuildConnectionInfo();
@@ -102,8 +102,8 @@ public class RemoteRunspace(TargetComputer target, string? password, ILogger log
     }
 
     /// <summary>
-    /// Fügt den Host zu WSMan:\localhost\Client\TrustedHosts hinzu falls noch nicht vorhanden.
-    /// Benötigt lokalen Admin — gleiche Voraussetzung wie das Original Client Center.
+    /// Adds the host to WSMan:\localhost\Client\TrustedHosts if not already present.
+    /// Requires local admin — same prerequisite as the original Client Center.
     /// </summary>
     private static async Task EnsureTrustedHostAsync(string hostname, CancellationToken ct)
     {
@@ -124,7 +124,7 @@ public class RemoteRunspace(TargetComputer target, string? password, ILogger log
         }
         catch
         {
-            // Nicht-kritisch — Verbindung trotzdem versuchen
+            // Non-critical — attempt the connection anyway
         }
     }
 
@@ -156,15 +156,15 @@ public class RemoteRunspace(TargetComputer target, string? password, ILogger log
     {
         var msg = ex.Message;
         if (msg.Contains("TrustedHosts") || msg.Contains("implicit credentials"))
-            return $"TrustedHosts: Bitte einmalig in PowerShell (Admin) ausführen:\n" +
+            return $"TrustedHosts: Please run this once in PowerShell (Admin):\n" +
                    $"Set-Item WSMan:\\localhost\\Client\\TrustedHosts -Value '*' -Force";
         if (msg.Contains("0x80090322") || msg.Contains("target principal"))
-            return $"Kerberos-Fehler für '{target.Hostname}' — FQDN statt IP verwenden.";
+            return $"Kerberos error for '{target.Hostname}' — use FQDN instead of IP.";
         if (msg.Contains("AccessDenied") || msg.Contains("Access is denied"))
-            return $"Zugriff verweigert auf '{target.Hostname}' — Admin-Rechte prüfen.";
+            return $"Access denied to '{target.Hostname}' — check admin rights.";
         if (msg.Contains("No such host") || msg.Contains("0x80338126"))
-            return $"WinRM nicht erreichbar auf '{target.Hostname}'.";
-        return $"Verbindung zu '{target.Hostname}' fehlgeschlagen: {msg}";
+            return $"WinRM unreachable on '{target.Hostname}'.";
+        return $"Connection to '{target.Hostname}' failed: {msg}";
     }
 
     private async Task<(string? os, string? ps)> QueryVersionsAsync(CancellationToken ct)

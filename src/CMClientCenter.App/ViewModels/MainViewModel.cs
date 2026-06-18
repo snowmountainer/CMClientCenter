@@ -14,7 +14,7 @@ public partial class MainViewModel(IConnectionService connectionService) : Obser
     public partial string TargetHost { get; set; } = string.Empty;
 
     [ObservableProperty] public partial bool IsConnected { get; set; }
-    [ObservableProperty] public partial string ConnectionStatus { get; set; } = "Nicht verbunden";
+    [ObservableProperty] public partial string ConnectionStatus { get; set; } = "Not connected";
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ConnectCommand))]
@@ -22,7 +22,7 @@ public partial class MainViewModel(IConnectionService connectionService) : Obser
 
     [ObservableProperty] public partial string? ErrorMessage { get; set; }
 
-    // Credentials für Remote-Verbindungen
+    // Credentials for remote connections
     public string? Username { get; set; }
     public string? Password { get; set; }
 
@@ -33,7 +33,7 @@ public partial class MainViewModel(IConnectionService connectionService) : Obser
         IsConnecting = true;
         ErrorMessage = null;
 
-        // Username/Password nur für Remote übergeben
+        // Only pass username/password for remote connections
         var username = string.IsNullOrEmpty(Username) ? null : Username;
         var password = string.IsNullOrEmpty(Password) ? null : Password;
 
@@ -44,12 +44,12 @@ public partial class MainViewModel(IConnectionService connectionService) : Obser
             if (result.IsSuccess && result.Value is { } r)
             {
                 IsConnected      = true;
-                ConnectionStatus = $"{(r.Mode == Shared.Enums.ConnectionMode.Local ? "Lokal" : "Remote")} — {r.OSVersion ?? "verbunden"}";
+                ConnectionStatus = $"{(r.Mode == Shared.Enums.ConnectionMode.Local ? "Local" : "Remote")} — {r.OSVersion ?? "connected"}";
             }
             else
             {
                 IsConnected      = false;
-                ConnectionStatus = "Verbindungsfehler";
+                ConnectionStatus = "Connection error";
                 ErrorMessage     = result.ErrorMessage;
             }
             IsConnecting = false;
@@ -65,7 +65,7 @@ public partial class MainViewModel(IConnectionService connectionService) : Obser
         _dispatcher.TryEnqueue(() =>
         {
             IsConnected      = false;
-            ConnectionStatus = "Nicht verbunden";
+            ConnectionStatus = "Not connected";
         });
     }
 }

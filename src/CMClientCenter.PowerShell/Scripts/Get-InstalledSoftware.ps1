@@ -1,5 +1,5 @@
 # Get-InstalledSoftware.ps1
-# InstallDate wird als String übergeben — C# übernimmt das Parsing
+# InstallDate is passed as a string — C# handles the parsing
 
 $paths = @(
     "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*",
@@ -13,7 +13,7 @@ $paths | ForEach-Object {
                   @{N="Version";    E={$_.DisplayVersion}},
                   @{N="Publisher";  E={$_.Publisher}},
                   @{N="InstallDate";E={
-                      # Als reinen String übergeben (yyyyMMdd) — kein DateTime-Cast
+                      # Pass as a plain string (yyyyMMdd) — no DateTime cast
                       if ($_.InstallDate -and $_.InstallDate -match '^\d{8}$') {
                           $_.InstallDate
                       } else { "" }

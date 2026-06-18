@@ -1,9 +1,9 @@
 # Invoke-CMAction.ps1
-# Kompatibel mit PS 5.1 und PS 7+
-# $ScheduleId wird vor dem Script per C# als Variable gesetzt
+# Compatible with PS 5.1 and PS 7+
+# $ScheduleId is set as a variable by C# before the script runs
 
 try {
-    # Invoke-CimMethod — PS 5.1 und PS 7 kompatibel
+    # Invoke-CimMethod — PS 5.1 and PS 7 compatible
     $cimResult = Invoke-CimMethod -Namespace "ROOT\ccm" `
                      -ClassName "SMS_Client" `
                      -MethodName "TriggerSchedule" `
@@ -17,7 +17,7 @@ try {
     }
 }
 catch {
-    # Fallback: WMI (PS 5.1 nativ, PS 7 deprecated aber noch verfügbar)
+    # Fallback: WMI (native on PS 5.1, deprecated but still available on PS 7)
     try {
         $sms = [wmiclass]"ROOT\ccm:SMS_Client"
         $sms.TriggerSchedule($ScheduleId) | Out-Null

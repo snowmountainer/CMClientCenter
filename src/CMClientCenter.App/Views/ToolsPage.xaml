@@ -8,7 +8,7 @@
             <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <TextBlock Text="Tools" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center"/>
-                <Button Grid.Column="1" Content="Aktualisieren" x:Name="RefreshButton"/>
+                <Button Grid.Column="1" Content="Refresh" x:Name="RefreshButton"/>
             </Grid>
             <ProgressBar x:Name="LoadingBar" IsIndeterminate="True" Visibility="Collapsed"/>
             <InfoBar x:Name="ResultBar" IsOpen="False" IsClosable="True"/>
@@ -22,21 +22,21 @@
                     <Grid>
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <TextBlock Text="CCM Cache" Style="{StaticResource SubtitleTextBlockStyle}"/>
-                        <Button Grid.Column="1" Content="Cache leeren" x:Name="ClearCacheButton"/>
+                        <Button Grid.Column="1" Content="Clear Cache" x:Name="ClearCacheButton"/>
                     </Grid>
                     <Grid ColumnSpacing="12" RowSpacing="4">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                         <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Pfad" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Path" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                         <TextBlock Grid.Row="0" Grid.Column="1" x:Name="CachePath" Text="-"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Konfiguriert" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Configured" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                         <TextBlock Grid.Row="1" Grid.Column="1" x:Name="CacheSize" Text="-"/>
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Belegt" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Used" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                         <TextBlock Grid.Row="2" Grid.Column="1" x:Name="CacheUsed" Text="-"/>
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Frei" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Free" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                         <TextBlock Grid.Row="3" Grid.Column="1" x:Name="CacheFree" Text="-"/>
                     </Grid>
-                    <TextBlock x:Name="CacheItemsHeader" Text="Cache-Einträge (0)"
+                    <TextBlock x:Name="CacheItemsHeader" Text="Cache Items (0)"
                                Style="{StaticResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                     <ListView x:Name="CacheItemsList" MaxHeight="160" SelectionMode="None">
@@ -64,11 +64,11 @@
                 <StackPanel Spacing="8">
                     <TextBlock Text="CCM Client" Style="{StaticResource SubtitleTextBlockStyle}"/>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Content="Client reparieren" x:Name="RepairButton"/>
-                        <Button Content="Client neu installieren" x:Name="ReinstallButton"/>
+                        <Button Content="Repair Client" x:Name="RepairButton"/>
+                        <Button Content="Reinstall Client" x:Name="ReinstallButton"/>
                     </StackPanel>
                     <InfoBar x:Name="CCMSetupBar" IsOpen="False" Severity="Informational"
-                             IsClosable="False" Message="ccmsetup.exe läuft aktuell..."/>
+                             IsClosable="False" Message="ccmsetup.exe is currently running..."/>
                 </StackPanel>
             </Border>
 
@@ -77,13 +77,13 @@
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     BorderThickness="1" CornerRadius="8" Padding="16">
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Neustart" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                    <TextBlock Text="Restart" Style="{StaticResource SubtitleTextBlockStyle}"/>
                     <TextBlock x:Name="RebootStatus" Text="-"/>
                     <TextBlock x:Name="RebootSources" Text="" FontSize="11"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Content="Neustart (30s)" x:Name="RebootButton"/>
-                        <Button Content="Neustart abbrechen" x:Name="CancelRebootButton"/>
+                        <Button Content="Restart (30s)" x:Name="RebootButton"/>
+                        <Button Content="Cancel Restart" x:Name="CancelRebootButton"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -111,13 +111,13 @@
                                     </StackPanel>
                                     <TextBlock Grid.Column="1" Text="{x:Bind InstallState}"
                                                VerticalAlignment="Center" FontSize="12"/>
-                                    <DropDownButton Grid.Column="2" Content="Aktion"
+                                    <DropDownButton Grid.Column="2" Content="Action"
                                                     VerticalAlignment="Center">
                                         <DropDownButton.Flyout>
                                             <MenuFlyout>
-                                                <MenuFlyoutItem Text="Installieren"   Tag="{x:Bind}" Click="AppAction_Click" x:Name="MenuInstall"/>
-                                                <MenuFlyoutItem Text="Reparieren"     Tag="{x:Bind}" Click="AppAction_Click" x:Name="MenuRepair"/>
-                                                <MenuFlyoutItem Text="Deinstallieren" Tag="{x:Bind}" Click="AppAction_Click" x:Name="MenuUninstall"/>
+                                                <MenuFlyoutItem Text="Install"   Tag="{x:Bind}" Click="AppAction_Click"/>
+                                                <MenuFlyoutItem Text="Repair"    Tag="{x:Bind}" Click="AppAction_Click"/>
+                                                <MenuFlyoutItem Text="Uninstall" Tag="{x:Bind}" Click="AppAction_Click"/>
                                             </MenuFlyout>
                                         </DropDownButton.Flyout>
                                     </DropDownButton>

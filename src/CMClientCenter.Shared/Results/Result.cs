@@ -1,7 +1,7 @@
 namespace CMClientCenter.Shared.Results;
 
 /// <summary>
-/// Discriminated union für Erfolg/Fehler ohne Exceptions im Happy Path.
+/// Discriminated union for success/failure without exceptions in the happy path.
 /// </summary>
 public sealed class Result<T>
 {
@@ -28,7 +28,7 @@ public sealed class Result<T>
 }
 
 /// <summary>
-/// Nicht-generisches Result für void-Operationen (z.B. TriggerAction).
+/// Non-generic Result for void operations (e.g. TriggerAction).
 /// Eigener Typ — kein Konflikt mit System.Threading.Tasks.
 /// </summary>
 public sealed class Result

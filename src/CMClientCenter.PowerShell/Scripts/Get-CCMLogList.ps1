@@ -1,4 +1,4 @@
-# Get-CCMLogList.ps1 — Verfügbare CCM Log-Dateien auflisten
+# Get-CCMLogList.ps1 — List available CCM log files
 
 $logPaths = @(
     "$env:WinDir\CCM\Logs",

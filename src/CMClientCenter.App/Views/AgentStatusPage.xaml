@@ -21,7 +21,7 @@
             </Grid.ColumnDefinitions>
             <TextBlock Text="Agent Status" Style="{StaticResource TitleTextBlockStyle}"
                        VerticalAlignment="Center"/>
-            <Button Grid.Column="1" Content="Aktualisieren"
+            <Button Grid.Column="1" Content="Refresh"
                     x:Name="RefreshButton" VerticalAlignment="Center"/>
         </Grid>
 
@@ -47,7 +47,7 @@
                     <TextBlock Text="⚠" Foreground="White" FontWeight="Bold"/>
                     <TextBlock x:Name="WarningCount" Text="0"
                                Foreground="White" FontWeight="SemiBold"/>
-                    <TextBlock Text="Warnung" Foreground="White" Opacity="0.8" FontSize="12"/>
+                    <TextBlock Text="Warning" Foreground="White" Opacity="0.8" FontSize="12"/>
                 </StackPanel>
             </Border>
             <Border x:Name="ErrorBadge" Background="Crimson"
@@ -56,12 +56,12 @@
                     <TextBlock Text="✗" Foreground="White" FontWeight="Bold"/>
                     <TextBlock x:Name="ErrorCount" Text="0"
                                Foreground="White" FontWeight="SemiBold"/>
-                    <TextBlock Text="Fehler" Foreground="White" Opacity="0.8" FontSize="12"/>
+                    <TextBlock Text="Error" Foreground="White" Opacity="0.8" FontSize="12"/>
                 </StackPanel>
             </Border>
         </StackPanel>
 
-        <!-- Health Checks gruppiert -->
+        <!-- Health checks grouped -->
         <ScrollViewer Grid.Row="4">
             <StackPanel x:Name="ChecksPanel" Spacing="12"/>
         </ScrollViewer>

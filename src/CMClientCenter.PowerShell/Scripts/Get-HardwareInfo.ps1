@@ -102,7 +102,7 @@ try {
 }
 catch {
     [PSCustomObject]@{
-        Manufacturer = "Fehler"; Model = $_.Exception.Message
+        Manufacturer = "Error"; Model = $_.Exception.Message
         SerialNumber = ""; BIOSVersion = ""; BIOSDate = ""
         CPUName = ""; CPUCores = 0; CPULogical = 0; CPUSocket = ""; CPUMaxMHz = 0
         TotalRAMGB = 0; RAMSlots = @()

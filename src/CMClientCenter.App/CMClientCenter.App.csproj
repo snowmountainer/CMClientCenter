@@ -17,7 +17,11 @@
     
     <!-- Verhindert doppelten Program/Main durch WinUI-Codegenerator -->
     <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <ApplicationIcon>CMClientCenter.ico</ApplicationIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <Content Include="CMClientCenter.ico" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CMClientCenter.Core\CMClientCenter.Core.csproj" />
     <ProjectReference Include="..\CMClientCenter.PowerShell\CMClientCenter.PowerShell.csproj" />
