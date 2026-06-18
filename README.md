@@ -1,4 +1,5 @@
 # CMClientCenter
+<img src="assets/images/icon.svg" align="right" width="120" alt="CMClientCenter Logo">
 
 Modern rebuild of [sccmclictr (Client Center for Configuration Manager)](https://github.com/rzander/sccmclictr) using **WinUI 3** and **PowerShell in-process Runspaces**.
 
