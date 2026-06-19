@@ -8,8 +8,4 @@ namespace CMClientCenter.App.Views;
 // AgentStatusPage  → AgentStatusPage.xaml / .xaml.cs
 // LogsPage         → LogsPage.xaml / .xaml.cs
 // HardwarePage     → HardwarePage.xaml / .xaml.cs
-
-public sealed partial class SettingsPage : Page
-{
-    public SettingsPage() => InitializeComponent();
-}
+// SettingsPage     → SettingsPage.xaml / .xaml.cs

@@ -165,3 +165,9 @@ public record CCMApplication(
     string InstallState,
     string ResolvedState
 );
+
+public record AppSettings
+{
+    public AppTheme Theme { get; init; } = AppTheme.System;
+}
+

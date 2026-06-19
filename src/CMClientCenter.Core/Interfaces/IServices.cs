@@ -59,3 +59,11 @@ public interface IToolsService
     Task<Result> InvokeToolAsync(string action, CancellationToken ct = default);
     Task<Result> InvokeApplicationAsync(string appId, string revision, string action, CancellationToken ct = default);
 }
+
+public interface IAppSettingsService
+{
+    AppSettings Current { get; }
+    Task SaveAsync(AppSettings settings, CancellationToken ct = default);
+    event EventHandler<AppSettings>? SettingsChanged;
+}
+

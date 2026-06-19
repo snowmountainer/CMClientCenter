@@ -19,8 +19,37 @@ public partial class App : Application
     {
         this.UnhandledException += OnUnhandledException;
         InitializeComponent();
-        try { Services = ConfigureServices(); }
+        try
+        {
+            Services = ConfigureServices();
+
+            // Application.RequestedTheme must be set before the first Activate() —
+            // it controls how ThemeResource brushes in Application.Resources
+            // resolve (e.g. CardBackgroundFillColorDefaultBrush). Setting only
+            // Window.Content.RequestedTheme later is not enough: that covers
+            // FrameworkElement-level theme but leaves Application-level brushes
+            // on their initial resolution.
+            var settingsService = Services.GetRequiredService<IAppSettingsService>();
+            this.RequestedTheme = ToApplicationTheme(settingsService.Current.Theme);
+        }
         catch (Exception ex) { LogCrash("DI-Setup", ex); throw; }
+    }
+
+    /// <summary>
+    /// Application.RequestedTheme only knows Light/Dark (no "System" value),
+    /// so for AppTheme.System we resolve the current Windows theme once here
+    /// by checking the system's background color brightness.
+    /// </summary>
+    private static ApplicationTheme ToApplicationTheme(Shared.Enums.AppTheme theme)
+    {
+        if (theme == Shared.Enums.AppTheme.Light) return ApplicationTheme.Light;
+        if (theme == Shared.Enums.AppTheme.Dark)  return ApplicationTheme.Dark;
+
+        // AppTheme.System: ask Windows directly
+        var bg = new Windows.UI.ViewManagement.UISettings()
+            .GetColorValue(Windows.UI.ViewManagement.UIColorType.Background);
+        var isDark = (bg.R + bg.G + bg.B) < 384; // roughly black vs. white
+        return isDark ? ApplicationTheme.Dark : ApplicationTheme.Light;
     }
 
     private static ServiceProvider ConfigureServices()
@@ -48,6 +77,7 @@ public partial class App : Application
 
         // Core Services
         services.AddSingleton<IConnectionService, ConnectionService>();
+        services.AddSingleton<IAppSettingsService, AppSettingsService>();
         services.AddSingleton<ICMAgentService, CMAgentService>();
         services.AddSingleton<IHardwareService, HardwareService>();
         services.AddSingleton<ISoftwareService, SoftwareService>();
@@ -71,8 +101,35 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        try { MainAppWindow = new MainWindow(); MainAppWindow.Activate(); }
+        try
+        {
+            MainAppWindow = new MainWindow();
+            MainAppWindow.Activate();
+        }
         catch (Exception ex) { LogCrash("OnLaunched", ex); }
+    }
+
+    /// <summary>
+    /// Applies the chosen theme to the given window's root element.
+    /// NOTE: Application.RequestedTheme (which controls ThemeResource
+    /// brushes in Application.Resources, e.g. card backgrounds) can only
+    /// be set once, before the very first Window.Activate() — see the
+    /// App() constructor. Setting it again later throws a COMException.
+    /// So at runtime we can only update the window-level (FrameworkElement)
+    /// theme; Application-level brushes require a restart to fully follow
+    /// a new theme choice.
+    /// </summary>
+    public static void ApplyTheme(Window window, Shared.Enums.AppTheme theme)
+    {
+        if (window.Content is FrameworkElement root)
+        {
+            root.RequestedTheme = theme switch
+            {
+                Shared.Enums.AppTheme.Light => ElementTheme.Light,
+                Shared.Enums.AppTheme.Dark  => ElementTheme.Dark,
+                _                           => ElementTheme.Default
+            };
+        }
     }
 
     private static void OnUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)

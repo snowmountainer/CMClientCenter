@@ -1,0 +1,29 @@
+PS C:\DEV\CMClientCenter> Get-ChildItem -Path . -Recurse -Filter 'SettingsPage*' | Select-Object FullName
+
+FullName                                                                                                                     
+--------                                                                                                                     
+C:\DEV\CMClientCenter\src\CMClientCenter.App\obj\Release\net10.0-windows10.0.19041.0\win-x64\embed\Views\SettingsPage.xbf    
+C:\DEV\CMClientCenter\src\CMClientCenter.App\obj\Release\net10.0-windows10.0.19041.0\win-x64\Views\SettingsPage.g.cs         
+C:\DEV\CMClientCenter\src\CMClientCenter.App\obj\Release\net10.0-windows10.0.19041.0\win-x64\Views\SettingsPage.g.i.cs       
+C:\DEV\CMClientCenter\src\CMClientCenter.App\obj\Release\net10.0-windows10.0.19041.0\win-x64\Views\SettingsPage.xaml         
+C:\DEV\CMClientCenter\src\CMClientCenter.App\obj\Release\net10.0-windows10.0.19041.0\win-x64\Views\SettingsPage.xbf          
+C:\DEV\CMClientCenter\src\CMClientCenter.App\obj\x64\Debug\net10.0-windows10.0.19041.0\embed\Views\SettingsPage.xbf          
+C:\DEV\CMClientCenter\src\CMClientCenter.App\obj\x64\Debug\net10.0-windows10.0.19041.0\Views\SettingsPage.g.cs               
+C:\DEV\CMClientCenter\src\CMClientCenter.App\obj\x64\Debug\net10.0-windows10.0.19041.0\Views\SettingsPage.g.cs.backup        
+C:\DEV\CMClientCenter\src\CMClientCenter.App\obj\x64\Debug\net10.0-windows10.0.19041.0\Views\SettingsPage.g.i.cs             
+C:\DEV\CMClientCenter\src\CMClientCenter.App\obj\x64\Release\net10.0-windows10.0.19041.0\embed\Views\SettingsPage.xbf        
+C:\DEV\CMClientCenter\src\CMClientCenter.App\obj\x64\Release\net10.0-windows10.0.19041.0\Views\SettingsPage.g.cs             
+C:\DEV\CMClientCenter\src\CMClientCenter.App\obj\x64\Release\net10.0-windows10.0.19041.0\Views\SettingsPage.g.i.cs           
+C:\DEV\CMClientCenter\src\CMClientCenter.App\obj\x64\Release\net10.0-windows10.0.19041.0\Views\SettingsPage.xaml             
+C:\DEV\CMClientCenter\src\CMClientCenter.App\obj\x64\Release\net10.0-windows10.0.19041.0\Views\SettingsPage.xbf              
+C:\DEV\CMClientCenter\src\CMClientCenter.App\obj\x64\Release\net10.0-windows10.0.19041.0\win-x64\embed\Views\SettingsPage.xbf
+C:\DEV\CMClientCenter\src\CMClientCenter.App\obj\x64\Release\net10.0-windows10.0.19041.0\win-x64\Views\SettingsPage.g.cs     
+C:\DEV\CMClientCenter\src\CMClientCenter.App\obj\x64\Release\net10.0-windows10.0.19041.0\win-x64\Views\SettingsPage.g.i.cs   
+C:\DEV\CMClientCenter\src\CMClientCenter.App\obj\x64\Release\net10.0-windows10.0.19041.0\win-x64\Views\SettingsPage.xaml     
+C:\DEV\CMClientCenter\src\CMClientCenter.App\obj\x64\Release\net10.0-windows10.0.19041.0\win-x64\Views\SettingsPage.xbf      
+C:\DEV\CMClientCenter\src\CMClientCenter.App\Views\SettingsPage.xaml                                                         
+C:\DEV\CMClientCenter\src\CMClientCenter.App\Views\SettingsPage.xaml.cs                                                      
+
+
+
+PS C:\DEV\CMClientCenter> 

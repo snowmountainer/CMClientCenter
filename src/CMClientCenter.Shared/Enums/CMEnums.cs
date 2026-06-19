@@ -1,5 +1,12 @@
 namespace CMClientCenter.Shared.Enums;
 
+public enum AppTheme
+{
+    System,
+    Light,
+    Dark
+}
+
 public enum CMClientState
 {
     Unknown,

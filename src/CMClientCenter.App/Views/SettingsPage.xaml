@@ -2,8 +2,23 @@
 <Page x:Class="CMClientCenter.App.Views.SettingsPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <StackPanel Spacing="16">
+    <StackPanel Spacing="16" MaxWidth="480" Margin="24">
         <TextBlock Text="Settings" Style="{StaticResource TitleTextBlockStyle}"/>
-        <TextBlock Text="TODO: Theme, WinRM timeout, credential storage" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="Theme" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            <ComboBox x:Name="ThemeCombo" Width="240" HorizontalAlignment="Left"
+                      SelectionChanged="ThemeCombo_SelectionChanged">
+                <ComboBoxItem Content="System" Tag="System"/>
+                <ComboBoxItem Content="Light"  Tag="Light"/>
+                <ComboBoxItem Content="Dark"   Tag="Dark"/>
+            </ComboBox>
+        </StackPanel>
+
+        <InfoBar x:Name="RestartBar" IsOpen="False" IsClosable="True" Severity="Informational"
+                 Title="Restart required"
+                 Message="Some elements (cards, backgrounds) only fully apply the new theme after restarting the app. The navigation pane updates immediately."/>
+
+        <TextBlock Text="TODO: WinRM timeout, credential storage" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
     </StackPanel>
 </Page>
