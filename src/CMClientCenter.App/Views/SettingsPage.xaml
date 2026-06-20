@@ -15,9 +15,11 @@
             </ComboBox>
         </StackPanel>
 
-        <InfoBar x:Name="RestartBar" IsOpen="False" IsClosable="True" Severity="Informational"
+        <InfoBar x:Name="RestartBar" IsOpen="False" IsClosable="False" Severity="Informational"
                  Title="Restart required"
                  Message="Some elements (cards, backgrounds) only fully apply the new theme after restarting the app. The navigation pane updates immediately."/>
+        <Button x:Name="RestartBarCloseButton" Content="Restart now" Click="RestartBar_Close_Click"
+                HorizontalAlignment="Left" Visibility="Collapsed"/>
 
         <TextBlock Text="TODO: WinRM timeout, credential storage" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
     </StackPanel>

@@ -23,7 +23,15 @@ public sealed partial class MainWindow : Window
         // at this point because 'new MainWindow()' hasn't returned yet.
         var settingsService = App.Services.GetRequiredService<IAppSettingsService>();
         App.ApplyTheme(this, settingsService.Current.Theme);
-        settingsService.SettingsChanged += (_, settings) => App.ApplyTheme(this, settings.Theme);
+        settingsService.SettingsChanged += (_, settings) =>
+        {
+            // Defer to the next dispatcher cycle: SettingsChanged can fire
+            // synchronously from inside a control's own event handler (e.g.
+            // ComboBox.SelectionChanged on the SettingsPage). Modifying the
+            // visual tree's RequestedTheme while that control is still mid-way
+            // through processing its own event causes a native crash.
+            DispatcherQueue.TryEnqueue(() => App.ApplyTheme(this, settings.Theme));
+        };
 
         // Caption buttons (minimize/maximize/close) don't follow RequestedTheme
         // automatically — sync them now and whenever the theme changes.
