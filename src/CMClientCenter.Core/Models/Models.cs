@@ -144,7 +144,6 @@ public record CCMToolsInfo(
     List<CacheItem> CacheItems,
     bool RebootPending,
     List<string> RebootSources,
-    List<CCMApplication> Applications,
     bool CCMSetupRunning
 );
 
@@ -164,6 +163,38 @@ public record CCMApplication(
     string SoftwareVersion,
     string InstallState,
     string ResolvedState
+);
+
+// Software Center: "Operating Systems" — Task Sequences (inkl. OSD/Bare-Metal),
+// gelesen aus CCM_Program (ROOT\ccm\clientsdk) gefiltert auf TaskSequence=true.
+// CCM_TaskSequence existiert nicht auf allen Clients und wurde verworfen
+// (siehe Get-CCMTaskSequences.ps1 fuer Details).
+//
+// HighImpact-Felder kommen direkt aus ConfigMgr (vom Admin in der Console
+// gepflegt) und werden 1:1 fuer den Bestaetigungsdialog vor dem Ausfuehren
+// verwendet, statt einen eigenen Warntext zu erfinden.
+public record CCMTaskSequence(
+    string ProgramId,
+    string PackageId,
+    string Name,
+    string FullName,
+    string PackageName,
+    string Description,
+    string Publisher,
+    string Version,
+    bool HighImpact,
+    bool HighImpactTaskSequence,
+    bool CustomHighImpactSet,
+    string CustomHighImpactHeadline,
+    string CustomHighImpactWarningTop,
+    string CustomHighImpactWarning,
+    string CustomHighImpactWarningInstall,
+    int EvaluationState,
+    string LastRunStatus,
+    string LastRunTime,
+    bool RestartRequired,
+    bool AdvertisedDirectly,
+    bool Published
 );
 
 public record AppSettings

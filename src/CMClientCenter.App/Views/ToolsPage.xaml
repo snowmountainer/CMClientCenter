@@ -87,46 +87,6 @@
                     </StackPanel>
                 </StackPanel>
             </Border>
-
-            <!-- Applications -->
-            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1" CornerRadius="8" Padding="16">
-                <StackPanel Spacing="8">
-                    <TextBlock x:Name="AppsHeader" Text="Applications (0)"
-                               Style="{StaticResource SubtitleTextBlockStyle}"/>
-                    <ListView x:Name="AppsList" SelectionMode="None">
-                        <ListView.ItemContainerStyle>
-                            <Style TargetType="ListViewItem"><Setter Property="Padding" Value="8,6"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style>
-                        </ListView.ItemContainerStyle>
-                        <ListView.ItemTemplate>
-                            <DataTemplate x:DataType="models:CCMApplication">
-                                <Grid ColumnSpacing="12">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="3*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0">
-                                        <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}">
-                                            <Run Text="{x:Bind Publisher}"/><Run Text=" "/><Run Text="{x:Bind SoftwareVersion}"/>
-                                        </TextBlock>
-                                    </StackPanel>
-                                    <TextBlock Grid.Column="1" Text="{x:Bind InstallState}"
-                                               VerticalAlignment="Center" FontSize="12"/>
-                                    <DropDownButton Grid.Column="2" Content="Action"
-                                                    VerticalAlignment="Center">
-                                        <DropDownButton.Flyout>
-                                            <MenuFlyout>
-                                                <MenuFlyoutItem Text="Install"   Tag="{x:Bind}" Click="AppAction_Click"/>
-                                                <MenuFlyoutItem Text="Repair"    Tag="{x:Bind}" Click="AppAction_Click"/>
-                                                <MenuFlyoutItem Text="Uninstall" Tag="{x:Bind}" Click="AppAction_Click"/>
-                                            </MenuFlyout>
-                                        </DropDownButton.Flyout>
-                                    </DropDownButton>
-                                </Grid>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-                </StackPanel>
-            </Border>
         </StackPanel>
     </ScrollViewer>
 </Page>

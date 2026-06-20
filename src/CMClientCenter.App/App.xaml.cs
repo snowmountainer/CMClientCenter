@@ -74,6 +74,7 @@ public partial class App : Application
         services.AddSingleton<IHealthExecutorService>(sp => sp.GetRequiredService<HealthExecutor>());
         services.AddSingleton<LogExecutor>();
         services.AddSingleton<ToolsExecutor>();
+        services.AddSingleton<SoftwareCenterExecutor>();
 
         // Core Services
         services.AddSingleton<IConnectionService, ConnectionService>();
@@ -85,6 +86,7 @@ public partial class App : Application
         services.AddSingleton<IAgentHealthService, AgentHealthService>();
         services.AddSingleton<ILogService, CMClientCenter.PowerShell.Executors.LogService>();
         services.AddSingleton<IToolsService>(sp => sp.GetRequiredService<ToolsExecutor>());
+        services.AddSingleton<ISoftwareCenterService>(sp => sp.GetRequiredService<SoftwareCenterExecutor>());
 
         // ViewModels
         services.AddTransient<MainViewModel>();
@@ -95,6 +97,7 @@ public partial class App : Application
         services.AddTransient<ActionsViewModel>();
         services.AddTransient<LogsViewModel>();
         services.AddTransient<ToolsViewModel>();
+        services.AddTransient<SoftwareCenterViewModel>();
 
         return services.BuildServiceProvider();
     }

@@ -212,13 +212,51 @@ public partial class ToolsViewModel(IToolsService toolsService) : ObservableObje
         IsBusy = false;
         if (result.IsSuccess) await RefreshCommand.ExecuteAsync(null);
     }
+}
+
+// Backs the "Software Center" page — Applications and Operating Systems
+// (Task Sequences, see Get-CCMTaskSequences.ps1 / CCM_Program).
+public partial class SoftwareCenterViewModel(ISoftwareCenterService softwareCenterService) : ObservableObject
+{
+    [ObservableProperty] private List<CCMApplication> _applications = [];
+    [ObservableProperty] private List<CCMTaskSequence> _taskSequences = [];
+    [ObservableProperty] private bool _isLoading;
+    [ObservableProperty] private bool _isBusy;
+    [ObservableProperty] private string? _errorMessage;
+    [ObservableProperty] private string? _lastResult;
+
+    [RelayCommand]
+    private async Task RefreshAsync()
+    {
+        IsLoading = true; ErrorMessage = null;
+        var appsResult = await softwareCenterService.GetApplicationsAsync();
+        if (appsResult.IsSuccess) Applications = appsResult.Value ?? [];
+        else ErrorMessage = appsResult.ErrorMessage;
+
+        var tsResult = await softwareCenterService.GetTaskSequencesAsync();
+        if (tsResult.IsSuccess) TaskSequences = tsResult.Value ?? [];
+        else ErrorMessage ??= tsResult.ErrorMessage;
+
+        IsLoading = false;
+    }
 
     [RelayCommand]
     private async Task InvokeApplicationAsync((string id, string rev, string action) p)
     {
         IsBusy = true; LastResult = null;
-        var result = await toolsService.InvokeApplicationAsync(p.id, p.rev, p.action);
+        var result = await softwareCenterService.InvokeApplicationAsync(p.id, p.rev, p.action);
         LastResult = result.IsSuccess ? $"✓ {p.action} started" : $"✗ {result.ErrorMessage}";
+        IsBusy = false;
+    }
+
+    // Aufrufer (Code-Behind) MUSS den High-Impact-Bestaetigungsdialog bereits
+    // gezeigt und bestaetigt haben, bevor dieser Command ausgefuehrt wird.
+    [RelayCommand]
+    private async Task InvokeTaskSequenceAsync((string programId, string packageId) p)
+    {
+        IsBusy = true; LastResult = null;
+        var result = await softwareCenterService.InvokeTaskSequenceAsync(p.programId, p.packageId);
+        LastResult = result.IsSuccess ? "✓ Task Sequence started" : $"✗ {result.ErrorMessage}";
         IsBusy = false;
     }
 }

@@ -57,7 +57,18 @@ public interface IToolsService
 {
     Task<Result<CCMToolsInfo>> GetToolsInfoAsync(CancellationToken ct = default);
     Task<Result> InvokeToolAsync(string action, CancellationToken ct = default);
+}
+
+// Software Center: SCCM/MECM Applications (and, later, Task Sequences /
+// Operating Systems) that the user can install, repair, or uninstall —
+// the equivalent of the native Windows "Software Center" app.
+public interface ISoftwareCenterService
+{
+    Task<Result<List<CCMApplication>>> GetApplicationsAsync(CancellationToken ct = default);
     Task<Result> InvokeApplicationAsync(string appId, string revision, string action, CancellationToken ct = default);
+
+    Task<Result<List<CCMTaskSequence>>> GetTaskSequencesAsync(CancellationToken ct = default);
+    Task<Result> InvokeTaskSequenceAsync(string programId, string packageId, CancellationToken ct = default);
 }
 
 public interface IAppSettingsService

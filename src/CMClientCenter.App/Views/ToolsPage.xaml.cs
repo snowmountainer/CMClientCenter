@@ -129,9 +129,6 @@ public sealed partial class ToolsPage : Page
         RebootStatus.Foreground = new SolidColorBrush(info.RebootPending ? Colors.DarkOrange : Colors.ForestGreen);
         RebootSources.Text      = info.RebootSources.Count > 0
             ? "Sources: " + string.Join(", ", info.RebootSources) : "";
-
-        AppsHeader.Text      = $"Applications ({info.Applications.Count})";
-        AppsList.ItemsSource = info.Applications;
     }
 
     private void ResetUI()
@@ -141,34 +138,7 @@ public sealed partial class ToolsPage : Page
         CacheItemsList.ItemsSource = null;
         RebootStatus.Text = "-";
         RebootSources.Text = "";
-        AppsList.ItemsSource = null;
-        AppsHeader.Text = "Applications (0)";
         CCMSetupBar.IsOpen = false;
         ResultBar.IsOpen = ErrorBar.IsOpen = false;
-    }
-
-    private async void AppAction_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is not MenuFlyoutItem item) return;
-        if (item.Tag is not CCMApplication app) return;
-
-        // Derive the action from the menu text
-        var action = item.Text switch
-        {
-            "Install"   => "Install",
-            "Repair"    => "Repair",
-            "Uninstall" => "Uninstall",
-            _           => ""
-        };
-        if (string.IsNullOrEmpty(action)) return;
-
-        SetButtonsEnabled(false);
-        ResultBar.IsOpen = false;
-        await ViewModel.InvokeApplicationCommand.ExecuteAsync((app.Id, app.Revision, action));
-        _dispatcher.TryEnqueue(() =>
-        {
-            ShowResult(ViewModel.LastResult);
-            SetButtonsEnabled(_connectionService.IsConnected);
-        });
     }
 }

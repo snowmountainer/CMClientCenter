@@ -353,25 +353,10 @@ public class ToolsExecutor(RunspaceManager runspace, ILogger<ToolsExecutor> logg
                 foreach (var s in raw.Split('|'))
                     if (!string.IsNullOrWhiteSpace(s)) rebootSources.Add(s.Trim());
 
-            // Query Applications separately — nested arrays are unreliable over WinRM
-            var apps = new List<CCMApplication>();
-            var appResults = await runspace.InvokeAsync(EmbeddedScripts.Load("Get-CCMApplications.ps1"), ct);
-            foreach (var app in appResults)
-            {
-                var name = PSObjectMapper.GetString(app, "Name");
-                if (string.IsNullOrEmpty(name)) continue;
-                apps.Add(new CCMApplication(
-                    PSObjectMapper.GetString(app,"Id"),      PSObjectMapper.GetString(app,"Revision"),
-                    name,                                    PSObjectMapper.GetString(app,"Publisher"),
-                    PSObjectMapper.GetString(app,"SoftwareVersion"),
-                    PSObjectMapper.GetString(app,"InstallState"), PSObjectMapper.GetString(app,"ResolvedState")));
-            }
-            apps.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase));
-
             return Result<CCMToolsInfo>.Success(new CCMToolsInfo(
                 PSObjectMapper.GetInt(o,"CacheSizeMB"), PSObjectMapper.GetInt(o,"CacheUsedMB"),
                 PSObjectMapper.GetInt(o,"CacheFreeMB"), PSObjectMapper.GetString(o,"CachePath"),
-                cacheItems, PSObjectMapper.GetBool(o,"RebootPending"), rebootSources, apps,
+                cacheItems, PSObjectMapper.GetBool(o,"RebootPending"), rebootSources,
                 PSObjectMapper.GetBool(o,"CCMSetupRunning")));
         }
         catch (Exception ex) { logger.LogError(ex,"GetToolsInfo failed"); return Result<CCMToolsInfo>.Failure(ex.Message,ex); }
@@ -388,6 +373,45 @@ public class ToolsExecutor(RunspaceManager runspace, ILogger<ToolsExecutor> logg
         catch (Exception ex) { return Result.Failure(ex.Message,ex); }
     }
 
+    private static Result ParseResult(List<System.Management.Automation.PSObject> r)
+    {
+        if (r.Count == 0) return Result.Success();
+        var success = PSObjectMapper.GetBool(r[0], "Success");
+        var message = PSObjectMapper.GetString(r[0], "Message");
+        return success ? Result.Success() : Result.Failure(message);
+    }
+}
+
+// Software Center: Applications (Install/Repair/Uninstall via CCM_Application).
+// Split out of ToolsExecutor so "Tools" (cache/reboot/client repair) and
+// "Software Center" (user-facing app catalog) stay independently testable
+// and the Software Center page can later grow Task Sequences / OS deployment
+// without dragging Tools-page concerns along.
+public class SoftwareCenterExecutor(RunspaceManager runspace, ILogger<SoftwareCenterExecutor> logger)
+    : CMClientCenter.Core.Interfaces.ISoftwareCenterService
+{
+    public async Task<Result<List<CCMApplication>>> GetApplicationsAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var apps = new List<CCMApplication>();
+            var appResults = await runspace.InvokeAsync(EmbeddedScripts.Load("Get-CCMApplications.ps1"), ct);
+            foreach (var app in appResults)
+            {
+                var name = PSObjectMapper.GetString(app, "Name");
+                if (string.IsNullOrEmpty(name)) continue;
+                apps.Add(new CCMApplication(
+                    PSObjectMapper.GetString(app,"Id"),      PSObjectMapper.GetString(app,"Revision"),
+                    name,                                    PSObjectMapper.GetString(app,"Publisher"),
+                    PSObjectMapper.GetString(app,"SoftwareVersion"),
+                    PSObjectMapper.GetString(app,"InstallState"), PSObjectMapper.GetString(app,"ResolvedState")));
+            }
+            apps.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase));
+            return Result<List<CCMApplication>>.Success(apps);
+        }
+        catch (Exception ex) { logger.LogError(ex,"GetApplications failed"); return Result<List<CCMApplication>>.Failure(ex.Message,ex); }
+    }
+
     public async Task<Result> InvokeApplicationAsync(string appId, string revision, string action, CancellationToken ct = default)
     {
         try
@@ -398,6 +422,62 @@ public class ToolsExecutor(RunspaceManager runspace, ILogger<ToolsExecutor> logg
             return ParseResult(r);
         }
         catch (Exception ex) { return Result.Failure(ex.Message,ex); }
+    }
+
+    // Operating Systems: Task Sequences (inkl. OSD), gelesen aus CCM_Program
+    // gefiltert auf TaskSequence=true (siehe Get-CCMTaskSequences.ps1).
+    public async Task<Result<List<CCMTaskSequence>>> GetTaskSequencesAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var list = new List<CCMTaskSequence>();
+            var tsResults = await runspace.InvokeAsync(EmbeddedScripts.Load("Get-CCMTaskSequences.ps1"), ct);
+            foreach (var ts in tsResults)
+            {
+                var name = PSObjectMapper.GetString(ts, "Name");
+                if (string.IsNullOrEmpty(name)) continue;
+                list.Add(new CCMTaskSequence(
+                    PSObjectMapper.GetString(ts, "ProgramID"),
+                    PSObjectMapper.GetString(ts, "PackageID"),
+                    name,
+                    PSObjectMapper.GetString(ts, "FullName"),
+                    PSObjectMapper.GetString(ts, "PackageName"),
+                    PSObjectMapper.GetString(ts, "Description"),
+                    PSObjectMapper.GetString(ts, "Publisher"),
+                    PSObjectMapper.GetString(ts, "Version"),
+                    PSObjectMapper.GetBool(ts, "HighImpact"),
+                    PSObjectMapper.GetBool(ts, "HighImpactTaskSequence"),
+                    PSObjectMapper.GetBool(ts, "CustomHighImpactSet"),
+                    PSObjectMapper.GetString(ts, "CustomHighImpactHeadline"),
+                    PSObjectMapper.GetString(ts, "CustomHighImpactWarningTop"),
+                    PSObjectMapper.GetString(ts, "CustomHighImpactWarning"),
+                    PSObjectMapper.GetString(ts, "CustomHighImpactWarningInstall"),
+                    PSObjectMapper.GetInt(ts, "EvaluationState"),
+                    PSObjectMapper.GetString(ts, "LastRunStatus"),
+                    PSObjectMapper.GetString(ts, "LastRunTime"),
+                    PSObjectMapper.GetBool(ts, "RestartRequired"),
+                    PSObjectMapper.GetBool(ts, "AdvertisedDirectly"),
+                    PSObjectMapper.GetBool(ts, "Published")));
+            }
+            list.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase));
+            return Result<List<CCMTaskSequence>>.Success(list);
+        }
+        catch (Exception ex) { logger.LogError(ex, "GetTaskSequences failed"); return Result<List<CCMTaskSequence>>.Failure(ex.Message, ex); }
+    }
+
+    // ACHTUNG: Der Aufrufer (UI) MUSS vor diesem Call bereits den
+    // High-Impact-Warn-Dialog bestaetigt haben (siehe CCMTaskSequence.HighImpact).
+    // Dieses Script fuehrt nur aus, was die UI bereits freigegeben hat.
+    public async Task<Result> InvokeTaskSequenceAsync(string programId, string packageId, CancellationToken ct = default)
+    {
+        try
+        {
+            var script = $"$TSProgramID='{programId}'\r\n$TSPackageID='{packageId}'\r\n" +
+                         EmbeddedScripts.Load("Invoke-CCMTaskSequence.ps1");
+            var r = await runspace.InvokeAsync(script, ct);
+            return ParseResult(r);
+        }
+        catch (Exception ex) { return Result.Failure(ex.Message, ex); }
     }
 
     private static Result ParseResult(List<System.Management.Automation.PSObject> r)
