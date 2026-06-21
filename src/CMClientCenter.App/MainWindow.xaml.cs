@@ -77,6 +77,7 @@ public sealed partial class MainWindow : Window
             "Software"    => typeof(SoftwarePage),
             "Actions"     => typeof(ActionsPage),
             "SoftwareCenter" => typeof(SoftwareCenterPage),
+            "Updates"     => typeof(UpdatesPage),
             "Tools"       => typeof(ToolsPage),
             "Logs"        => typeof(LogsPage),
             _             => typeof(DashboardPage)

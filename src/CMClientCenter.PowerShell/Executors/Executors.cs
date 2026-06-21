@@ -488,3 +488,68 @@ public class SoftwareCenterExecutor(RunspaceManager runspace, ILogger<SoftwareCe
         return success ? Result.Success() : Result.Failure(message);
     }
 }
+
+// "Updates" page — see Get-CCMSoftwareUpdates.ps1 for why CCM_UpdateStatus
+// (display) and CCM_SoftwareUpdate (installable) are combined there already,
+// so this executor just deserializes the already-joined PowerShell result.
+public class UpdatesExecutor(RunspaceManager runspace, ILogger<UpdatesExecutor> logger)
+    : CMClientCenter.Core.Interfaces.IUpdatesService
+{
+    public async Task<Result<List<CCMSoftwareUpdate>>> GetUpdatesAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var list = new List<CCMSoftwareUpdate>();
+            var results = await runspace.InvokeAsync(EmbeddedScripts.Load("Get-CCMSoftwareUpdates.ps1"), ct);
+            foreach (var u in results)
+            {
+                var uniqueId = PSObjectMapper.GetString(u, "UniqueId");
+                if (string.IsNullOrEmpty(uniqueId)) continue;
+
+                var installableId = PSObjectMapper.GetString(u, "InstallableUpdateId");
+                list.Add(new CCMSoftwareUpdate(
+                    uniqueId,
+                    PSObjectMapper.GetString(u, "Article"),
+                    PSObjectMapper.GetString(u, "Bulletin"),
+                    PSObjectMapper.GetString(u, "Title"),
+                    PSObjectMapper.GetString(u, "Status"),
+                    PSObjectMapper.GetInt(u, "RevisionNumber"),
+                    PSObjectMapper.GetString(u, "ScanTime"),
+                    PSObjectMapper.GetString(u, "UpdateClassification"),
+                    string.IsNullOrEmpty(installableId) ? null : installableId));
+            }
+            // Missing zuerst, dann alphabetisch nach Titel — Pending-relevante
+            // Eintraege sind in der "All"-Ansicht so am schnellsten zu finden.
+            list.Sort((a, b) =>
+            {
+                var statusCompare = string.Compare(b.Status, a.Status, StringComparison.OrdinalIgnoreCase); // "Missing" > "Installed"
+                return statusCompare != 0 ? statusCompare : string.Compare(a.Title, b.Title, StringComparison.OrdinalIgnoreCase);
+            });
+            return Result<List<CCMSoftwareUpdate>>.Success(list);
+        }
+        catch (Exception ex) { logger.LogError(ex, "GetUpdates failed"); return Result<List<CCMSoftwareUpdate>>.Failure(ex.Message, ex); }
+    }
+
+    // ACHTUNG: updateId MUSS aus CCMSoftwareUpdate.InstallableUpdateId stammen
+    // (vom Title/Article-Abgleich in Get-CCMSoftwareUpdates.ps1) — eine UpdateID
+    // ohne diesen Abgleich existiert nicht zuverlaessig auf dem Client.
+    public async Task<Result> InstallUpdateAsync(string updateId, CancellationToken ct = default)
+    {
+        try
+        {
+            var script = $"$UpdateIdToInstall='{updateId}'\r\n" +
+                         EmbeddedScripts.Load("Invoke-CCMSoftwareUpdate.ps1");
+            var r = await runspace.InvokeAsync(script, ct);
+            return ParseResult(r);
+        }
+        catch (Exception ex) { return Result.Failure(ex.Message, ex); }
+    }
+
+    private static Result ParseResult(List<System.Management.Automation.PSObject> r)
+    {
+        if (r.Count == 0) return Result.Success();
+        var success = PSObjectMapper.GetBool(r[0], "Success");
+        var message = PSObjectMapper.GetString(r[0], "Message");
+        return success ? Result.Success() : Result.Failure(message);
+    }
+}

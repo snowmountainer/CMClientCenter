@@ -260,3 +260,38 @@ public partial class SoftwareCenterViewModel(ISoftwareCenterService softwareCent
         IsBusy = false;
     }
 }
+
+// Backs the "Updates" page — "All Updates" / "Pending Updates" tabs.
+// Both tabs read from the same loaded list (Updates); the Page's code-behind
+// applies the Status=="Missing" filter for the Pending tab, same pattern as
+// the text filter boxes elsewhere — no separate load/service call needed.
+public partial class UpdatesViewModel(IUpdatesService updatesService) : ObservableObject
+{
+    [ObservableProperty] private List<CCMSoftwareUpdate> _updates = [];
+    [ObservableProperty] private bool _isLoading;
+    [ObservableProperty] private bool _isBusy;
+    [ObservableProperty] private string? _errorMessage;
+    [ObservableProperty] private string? _lastResult;
+
+    [RelayCommand]
+    private async Task RefreshAsync()
+    {
+        IsLoading = true; ErrorMessage = null;
+        var result = await updatesService.GetUpdatesAsync();
+        if (result.IsSuccess) Updates = result.Value ?? [];
+        else ErrorMessage = result.ErrorMessage;
+        IsLoading = false;
+    }
+
+    // updateId MUSS aus CCMSoftwareUpdate.InstallableUpdateId stammen (siehe
+    // Get-CCMSoftwareUpdates.ps1) — Aufrufer (Code-Behind) prueft das bereits,
+    // indem der Install-Button nur aktiv ist, wenn dieses Feld nicht null ist.
+    [RelayCommand]
+    private async Task InstallUpdateAsync(string updateId)
+    {
+        IsBusy = true; LastResult = null;
+        var result = await updatesService.InstallUpdateAsync(updateId);
+        LastResult = result.IsSuccess ? "✓ Update installation started" : $"✗ {result.ErrorMessage}";
+        IsBusy = false;
+    }
+}

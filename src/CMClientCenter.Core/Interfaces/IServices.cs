@@ -71,6 +71,15 @@ public interface ISoftwareCenterService
     Task<Result> InvokeTaskSequenceAsync(string programId, string packageId, CancellationToken ct = default);
 }
 
+// "Updates" page — "All Updates" / "Pending Updates", analog to the old
+// "Client Center for Configuration Manager" tool's Updates view.
+// See Get-CCMSoftwareUpdates.ps1 for why two WMI classes are combined.
+public interface IUpdatesService
+{
+    Task<Result<List<CCMSoftwareUpdate>>> GetUpdatesAsync(CancellationToken ct = default);
+    Task<Result> InstallUpdateAsync(string updateId, CancellationToken ct = default);
+}
+
 public interface IAppSettingsService
 {
     AppSettings Current { get; }

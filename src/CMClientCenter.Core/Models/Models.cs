@@ -197,8 +197,38 @@ public record CCMTaskSequence(
     bool Published
 );
 
+// "Updates" Page — "All Updates" / "Pending Updates".
+//
+// Anzeige-Quelle: CCM_UpdateStatus (root\ccm\SoftwareUpdates\UpdatesStore).
+// Diese Klasse liefert Status="Installed"/"Missing" direkt (keine Compliance-
+// State-Zahl zu interpretieren), deckt sich mit dem, was das alte "Client
+// Center for Configuration Manager"-Tool unter "All Updates" zeigt. Sie
+// liefert aber KEINE UpdateID und keine Install-Methode.
+//
+// Installations-Quelle: CCM_SoftwareUpdate (ROOT\ccm\clientsdk) — getrennte
+// Klasse, nur dort existiert eine UpdateID, die CCM_SoftwareUpdatesManager.
+// InstallUpdates (Array-Parameter!) zum Anstossen der Installation benötigt.
+//
+// Get-CCMSoftwareUpdates.ps1 macht den Title/Article-Abgleich bereits in
+// PowerShell und liefert InstallableUpdateId nur, wenn ein Match in
+// CCM_SoftwareUpdate gefunden wurde — leer/null bedeutet: in der UI nicht
+// installierbar (Button deaktiviert), z.B. weil der Client das Update noch
+// nicht als "deployed and applicable" erkannt hat.
+public record CCMSoftwareUpdate(
+    string UniqueId,
+    string Article,
+    string Bulletin,
+    string Title,
+    string Status,            // "Installed" | "Missing"
+    int RevisionNumber,
+    string ScanTime,
+    string UpdateClassification,
+    string? InstallableUpdateId   // UpdateID aus CCM_SoftwareUpdate, falls Match gefunden — sonst null
+);
+
 public record AppSettings
 {
     public AppTheme Theme { get; init; } = AppTheme.System;
 }
+
 
