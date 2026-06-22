@@ -1,21 +1,25 @@
-# Get-CCMLogList.ps1 — List available CCM log files
+# Get-CCMLogList.ps1 — List available CCM + PSADT log files
+# PS 5.1 compatible
+# Source: CCM = WinDir\CCM\Logs, CCMSetup = WinDir\ccmsetup\Logs, PSADT = WinDir\Logs\Software (flat, no recursion)
 
-$logPaths = @(
-    "$env:WinDir\CCM\Logs",
-    "$env:WinDir\ccmsetup\Logs"
+$logSources = @(
+    @{ Path = "$env:WinDir\CCM\Logs";      Source = "CCM";      Folder = "CCM" }
+    @{ Path = "$env:WinDir\ccmsetup\Logs"; Source = "CCMSetup"; Folder = "CCMSetup" }
+    @{ Path = "$env:WinDir\Logs\Software"; Source = "PSADT";    Folder = "PSADT" }
 )
 
-foreach ($path in $logPaths) {
-    if (Test-Path $path) {
-        Get-ChildItem -Path $path -Filter "*.log" -ErrorAction SilentlyContinue |
-            Sort-Object Name |
+foreach ($src in $logSources) {
+    if (Test-Path $src.Path) {
+        Get-ChildItem -Path $src.Path -Filter "*.log" -File -ErrorAction SilentlyContinue |
+            Sort-Object LastWriteTime -Descending |
             ForEach-Object {
                 [PSCustomObject]@{
                     Name     = $_.Name
                     SizeMB   = [math]::Round($_.Length / 1KB, 0)
                     Modified = $_.LastWriteTime.ToString("dd.MM.yyyy HH:mm")
                     Path     = $_.FullName
-                    Folder   = Split-Path $path -Leaf
+                    Folder   = $src.Folder
+                    Source   = $src.Source
                 }
             }
     }

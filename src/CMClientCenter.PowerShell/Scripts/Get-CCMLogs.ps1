@@ -1,16 +1,25 @@
 # Get-CCMLogs.ps1 — PS 5.1 compatible
 # Parameters: $LogName (filename without path), $MaxLines (default 200)
+# Searches CCM, CCMSetup and PSADT (WinDir\Logs\Software) log folders.
 
-$ccmLogPath = "$env:WinDir\CCM\Logs"
-$logFile    = Join-Path $ccmLogPath $LogName
+$searchPaths = @(
+    "$env:WinDir\CCM\Logs",
+    "$env:WinDir\ccmsetup\Logs",
+    "$env:WinDir\Logs\Software"
+)
 
-if (-not (Test-Path $logFile)) {
-    # Fallback: CCMSetup logs
-    $logFile = Join-Path "$env:WinDir\ccmsetup\Logs" $LogName
-    if (-not (Test-Path $logFile)) {
-        [PSCustomObject]@{ Error = "Log not found: $logFile" }
-        return
+$logFile = $null
+foreach ($path in $searchPaths) {
+    $candidate = Join-Path $path $LogName
+    if (Test-Path $candidate) {
+        $logFile = $candidate
+        break
     }
+}
+
+if (-not $logFile) {
+    [PSCustomObject]@{ Error = "Log not found: $LogName" }
+    return
 }
 
 # Read the last N lines

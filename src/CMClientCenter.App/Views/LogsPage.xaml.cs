@@ -47,8 +47,13 @@ public sealed partial class LogsPage : Page
                         ErrorBar.Message = ViewModel.ErrorMessage ?? "";
                         break;
                     case nameof(LogsViewModel.LogFiles):
-                        // LogFiles directly as ItemsSource — XAML DataTemplate renders them
-                        LogFileList.ItemsSource = ViewModel.LogFiles;
+                        // Each tab gets its own pre-filtered list from the ViewModel
+                        CcmLogFileList.ItemsSource      = ViewModel.CcmLogFiles;
+                        CcmSetupLogFileList.ItemsSource = ViewModel.CcmSetupLogFiles;
+                        PsadtLogFileList.ItemsSource    = ViewModel.PsadtLogFiles;
+                        CcmCountText.Text               = ViewModel.CcmLogCount.ToString();
+                        CcmSetupCountText.Text          = ViewModel.CcmSetupLogCount.ToString();
+                        PsadtCountText.Text              = ViewModel.PsadtLogCount.ToString();
                         break;
                     case nameof(LogsViewModel.Entries):
                     case nameof(LogsViewModel.FilteredEntries):
@@ -81,17 +86,38 @@ public sealed partial class LogsPage : Page
         {
             _dispatcher.TryEnqueue(() =>
             {
-                LogFileList.ItemsSource  = null;
-                EntriesList.ItemsSource  = null;
-                LogTitle.Text            = "Logs";
-                ErrorBar.IsOpen          = false;
+                CcmLogFileList.ItemsSource      = null;
+                CcmSetupLogFileList.ItemsSource = null;
+                PsadtLogFileList.ItemsSource    = null;
+                EntriesList.ItemsSource         = null;
+                LogTitle.Text                   = "Logs";
+                ErrorBar.IsOpen                 = false;
             });
         }
     }
 
+    // Switching tabs shows the matching file list and clears the viewer so
+    // the user isn't left looking at a file from another source.
+    private void SourcePivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        CcmLogFileList.Visibility      = SourcePivot.SelectedItem == CcmTab      ? Visibility.Visible : Visibility.Collapsed;
+        CcmSetupLogFileList.Visibility = SourcePivot.SelectedItem == CcmSetupTab ? Visibility.Visible : Visibility.Collapsed;
+        PsadtLogFileList.Visibility    = SourcePivot.SelectedItem == PsadtTab    ? Visibility.Visible : Visibility.Collapsed;
+
+        CcmLogFileList.SelectedItem      = null;
+        CcmSetupLogFileList.SelectedItem = null;
+        PsadtLogFileList.SelectedItem    = null;
+
+        ViewModel.SelectedLog = null;
+        ViewModel.Entries     = [];
+        LogTitle.Text         = "Logs";
+        FilterBox.Text        = "";
+    }
+
+    // Shared handler for all three per-tab ListViews
     private async void LogFileList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (LogFileList.SelectedItem is not LogFileInfo logFile) return;
+        if (sender is not ListView list || list.SelectedItem is not LogFileInfo logFile) return;
 
         ViewModel.SelectedLog = logFile;
         LogTitle.Text         = logFile.Name;

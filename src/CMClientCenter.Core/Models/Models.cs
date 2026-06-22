@@ -133,7 +133,8 @@ public record LogFileInfo(
     string Name,
     int SizeKB,
     string Modified,
-    string Folder
+    string Folder,
+    string Source = "CCM"   // CCM | CCMSetup | PSADT
 );
 
 public record CCMToolsInfo(

@@ -234,12 +234,17 @@ public class LogExecutor(RunspaceManager runspace, ILogger<LogExecutor> logger)
 
             var files = results
                 .Where(r => r is not null)
-                .Select(r => new LogFileInfo(
-                    Name:     PSObjectMapper.GetString(r, "Name"),
-                    SizeKB:   PSObjectMapper.GetInt(r, "SizeMB"),
-                    Modified: PSObjectMapper.GetString(r, "Modified"),
-                    Folder:   PSObjectMapper.GetString(r, "Folder")
-                ))
+                .Select(r =>
+                {
+                    var src = PSObjectMapper.GetString(r, "Source");
+                    return new LogFileInfo(
+                        Name:     PSObjectMapper.GetString(r, "Name"),
+                        SizeKB:   PSObjectMapper.GetInt(r, "SizeMB"),
+                        Modified: PSObjectMapper.GetString(r, "Modified"),
+                        Folder:   PSObjectMapper.GetString(r, "Folder"),
+                        Source:   string.IsNullOrEmpty(src) ? "CCM" : src
+                    );
+                })
                 .Where(f => !string.IsNullOrEmpty(f.Name))
                 .ToList();
 

@@ -5,154 +5,228 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:CMClientCenter.Core.Models">
 
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="230"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+    <Page.Resources>
+        <!-- Shared item template for the log-file list (all three tabs) -->
+        <DataTemplate x:Key="LogFileItemTemplate" x:DataType="models:LogFileInfo">
+            <StackPanel>
+                <TextBlock Text="{x:Bind Name}"
+                           FontSize="12" FontWeight="SemiBold"
+                           TextTrimming="CharacterEllipsis"/>
+                <TextBlock FontSize="10"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                    <Run Text="{x:Bind SizeKB}"/>
+                    <Run Text=" KB  •  "/>
+                    <Run Text="{x:Bind Modified}"/>
+                </TextBlock>
+            </StackPanel>
+        </DataTemplate>
 
-        <!-- Left column: log file list -->
-        <Grid Grid.Column="0" RowSpacing="8" Margin="0,0,8,0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+        <Style x:Key="LogFileListItemStyle" TargetType="ListViewItem">
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        </Style>
+    </Page.Resources>
 
-            <TextBlock Grid.Row="0" Text="Log Files"
-                       Style="{StaticResource SubtitleTextBlockStyle}"/>
-            <Button Grid.Row="1" Content="Refresh"
-                    x:Name="RefreshFilesButton" HorizontalAlignment="Stretch"/>
+    <Grid RowSpacing="8" Padding="0,0,16,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-            <ListView Grid.Row="2" x:Name="LogFileList"
-                      SelectionMode="Single"
-                      SelectionChanged="LogFileList_SelectionChanged">
-                <ListView.ItemContainerStyle>
-                    <Style TargetType="ListViewItem">
-                        <Setter Property="Padding" Value="8,6"/>
-                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                    </Style>
-                </ListView.ItemContainerStyle>
-                <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="models:LogFileInfo">
-                        <StackPanel>
-                            <TextBlock Text="{x:Bind Name}"
-                                       FontSize="12" FontWeight="SemiBold"
-                                       TextTrimming="CharacterEllipsis"/>
-                            <TextBlock FontSize="10"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}">
-                                <Run Text="{x:Bind SizeKB}"/>
-                                <Run Text=" KB  •  "/>
-                                <Run Text="{x:Bind Modified}"/>
-                            </TextBlock>
-                        </StackPanel>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-        </Grid>
+        <TextBlock Grid.Row="0" Text="Logs"
+                   Style="{StaticResource TitleTextBlockStyle}"
+                   Margin="0,0,0,4"/>
 
-        <!-- Right column: log entries -->
-        <Grid Grid.Column="1" RowSpacing="8" Padding="8,0,16,16">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+        <!-- Full-width tab bar: CCM Client / CCMSetup / PSADT.
+             PivotItems intentionally have no Content — they're used only
+             for their headers. The file lists and the shared log viewer
+             live in the Grid below. -->
+        <Pivot Grid.Row="1" x:Name="SourcePivot"
+               SelectionChanged="SourcePivot_SelectionChanged">
 
-            <Grid Grid.Row="0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock x:Name="LogTitle" Text="Logs"
-                           Style="{StaticResource TitleTextBlockStyle}"
-                           VerticalAlignment="Center"/>
-                <ComboBox Grid.Column="1" x:Name="MaxLinesBox"
-                          SelectedIndex="1" Margin="8,0"
-                          SelectionChanged="MaxLinesBox_SelectionChanged">
-                    <ComboBoxItem Content="100 lines"/>
-                    <ComboBoxItem Content="200 lines"/>
-                    <ComboBoxItem Content="500 lines"/>
-                    <ComboBoxItem Content="1000 lines"/>
-                </ComboBox>
-                <Button Grid.Column="2" Content="Reload"
-                        x:Name="RefreshLogButton"/>
+            <PivotItem x:Name="CcmTab">
+                <PivotItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="CCM Client"/>
+                        <Border Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                CornerRadius="10" Padding="8,1" VerticalAlignment="Center">
+                            <TextBlock x:Name="CcmCountText" Text="0"
+                                       Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                        </Border>
+                    </StackPanel>
+                </PivotItem.Header>
+            </PivotItem>
+
+            <PivotItem x:Name="CcmSetupTab">
+                <PivotItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="CCMSetup"/>
+                        <Border Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                CornerRadius="10" Padding="8,1" VerticalAlignment="Center">
+                            <TextBlock x:Name="CcmSetupCountText" Text="0"
+                                       Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                        </Border>
+                    </StackPanel>
+                </PivotItem.Header>
+            </PivotItem>
+
+            <PivotItem x:Name="PsadtTab">
+                <PivotItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="PSADT"/>
+                        <Border Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                CornerRadius="10" Padding="8,1" VerticalAlignment="Center">
+                            <TextBlock x:Name="PsadtCountText" Text="0"
+                                       Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                        </Border>
+                    </StackPanel>
+                </PivotItem.Header>
+            </PivotItem>
+
+        </Pivot>
+
+        <!-- Master-detail area: file list (current tab) + shared log viewer -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="260"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left column: file list for the currently selected tab -->
+            <Grid Grid.Column="0" RowSpacing="8" Margin="0,0,8,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Button Grid.Row="0" Content="Refresh"
+                        x:Name="RefreshFilesButton" HorizontalAlignment="Stretch"/>
+
+                <ListView Grid.Row="1" x:Name="CcmLogFileList"
+                          SelectionMode="Single"
+                          ItemTemplate="{StaticResource LogFileItemTemplate}"
+                          ItemContainerStyle="{StaticResource LogFileListItemStyle}"
+                          SelectionChanged="LogFileList_SelectionChanged"/>
+
+                <ListView Grid.Row="1" x:Name="CcmSetupLogFileList"
+                          Visibility="Collapsed"
+                          SelectionMode="Single"
+                          ItemTemplate="{StaticResource LogFileItemTemplate}"
+                          ItemContainerStyle="{StaticResource LogFileListItemStyle}"
+                          SelectionChanged="LogFileList_SelectionChanged"/>
+
+                <ListView Grid.Row="1" x:Name="PsadtLogFileList"
+                          Visibility="Collapsed"
+                          SelectionMode="Single"
+                          ItemTemplate="{StaticResource LogFileItemTemplate}"
+                          ItemContainerStyle="{StaticResource LogFileListItemStyle}"
+                          SelectionChanged="LogFileList_SelectionChanged"/>
             </Grid>
 
-            <ProgressBar Grid.Row="1" x:Name="LoadingBar"
-                         IsIndeterminate="True" Visibility="Collapsed"/>
-            <InfoBar Grid.Row="2" x:Name="ErrorBar"
-                     IsOpen="False" Severity="Error" IsClosable="True"/>
-            <TextBox Grid.Row="3" x:Name="FilterBox"
-                     PlaceholderText="Filter (message, component…)"
-                     TextChanged="FilterBox_TextChanged"/>
+            <!-- Right column: log entries (shared viewer for all three tabs) -->
+            <Grid Grid.Column="1" RowSpacing="8" Padding="8,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-            <ListView Grid.Row="4" x:Name="EntriesList" SelectionMode="None">
-                <ListView.Header>
-                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                            BorderThickness="0,0,0,1" Padding="12,6">
-                        <Grid ColumnSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="6"/>
-                                <ColumnDefinition Width="140"/>
-                                <ColumnDefinition Width="150"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="1" Text="Time"
-                                       Style="{StaticResource CaptionTextBlockStyle}"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Grid.Column="2" Text="Component"
-                                       Style="{StaticResource CaptionTextBlockStyle}"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Grid.Column="3" Text="Message"
-                                       Style="{StaticResource CaptionTextBlockStyle}"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                        </Grid>
-                    </Border>
-                </ListView.Header>
-                <ListView.ItemContainerStyle>
-                    <Style TargetType="ListViewItem">
-                        <Setter Property="Padding" Value="12,3"/>
-                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                    </Style>
-                </ListView.ItemContainerStyle>
-                <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="models:LogEntry">
-                        <Grid ColumnSpacing="8" MinHeight="22">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="6"/>
-                                <ColumnDefinition Width="140"/>
-                                <ColumnDefinition Width="150"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <!-- Severity color as narrow stripe -->
-                            <Border Grid.Column="0" x:Name="SeverityBar"
-                                    CornerRadius="3" VerticalAlignment="Stretch"/>
-                            <TextBlock Grid.Column="1"
-                                       Text="{x:Bind Time}"
-                                       FontSize="11" FontFamily="Consolas"
-                                       VerticalAlignment="Top"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Grid.Column="2"
-                                       Text="{x:Bind Component}"
-                                       FontSize="11"
-                                       VerticalAlignment="Top"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                       TextTrimming="CharacterEllipsis"
-                                       ToolTipService.ToolTip="{x:Bind Component}"/>
-                            <TextBlock Grid.Column="3"
-                                       Text="{x:Bind Message}"
-                                       FontSize="11" FontFamily="Consolas"
-                                       TextWrapping="Wrap"
-                                       ToolTipService.ToolTip="{x:Bind Message}"/>
-                        </Grid>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="LogTitle" Text="Logs"
+                               Style="{StaticResource SubtitleTextBlockStyle}"
+                               VerticalAlignment="Center"/>
+                    <ComboBox Grid.Column="1" x:Name="MaxLinesBox"
+                              SelectedIndex="1" Margin="8,0"
+                              SelectionChanged="MaxLinesBox_SelectionChanged">
+                        <ComboBoxItem Content="100 lines"/>
+                        <ComboBoxItem Content="200 lines"/>
+                        <ComboBoxItem Content="500 lines"/>
+                        <ComboBoxItem Content="1000 lines"/>
+                    </ComboBox>
+                    <Button Grid.Column="2" Content="Reload"
+                            x:Name="RefreshLogButton"/>
+                </Grid>
+
+                <ProgressBar Grid.Row="1" x:Name="LoadingBar"
+                             IsIndeterminate="True" Visibility="Collapsed"/>
+                <InfoBar Grid.Row="2" x:Name="ErrorBar"
+                         IsOpen="False" Severity="Error" IsClosable="True"/>
+                <TextBox Grid.Row="3" x:Name="FilterBox"
+                         PlaceholderText="Filter (message, component…)"
+                         TextChanged="FilterBox_TextChanged"/>
+
+                <ListView Grid.Row="4" x:Name="EntriesList" SelectionMode="None">
+                    <ListView.Header>
+                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                BorderThickness="0,0,0,1" Padding="12,6">
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="6"/>
+                                    <ColumnDefinition Width="140"/>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="1" Text="Time"
+                                           Style="{StaticResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Grid.Column="2" Text="Component"
+                                           Style="{StaticResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Grid.Column="3" Text="Message"
+                                           Style="{StaticResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            </Grid>
+                        </Border>
+                    </ListView.Header>
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="Padding" Value="12,3"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="models:LogEntry">
+                            <Grid ColumnSpacing="8" MinHeight="22">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="6"/>
+                                    <ColumnDefinition Width="140"/>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <!-- Severity color as narrow stripe -->
+                                <Border Grid.Column="0" x:Name="SeverityBar"
+                                        CornerRadius="3" VerticalAlignment="Stretch"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{x:Bind Time}"
+                                           FontSize="11" FontFamily="Consolas"
+                                           VerticalAlignment="Top"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="{x:Bind Component}"
+                                           FontSize="11"
+                                           VerticalAlignment="Top"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTipService.ToolTip="{x:Bind Component}"/>
+                                <TextBlock Grid.Column="3"
+                                           Text="{x:Bind Message}"
+                                           FontSize="11" FontFamily="Consolas"
+                                           TextWrapping="Wrap"
+                                           ToolTipService.ToolTip="{x:Bind Message}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
         </Grid>
     </Grid>
 </Page>

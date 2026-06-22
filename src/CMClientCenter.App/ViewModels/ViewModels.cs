@@ -160,8 +160,32 @@ public partial class LogsViewModel(ILogService logService) : ObservableObject
             e.Message.Contains(Filter, StringComparison.OrdinalIgnoreCase) ||
             e.Component.Contains(Filter, StringComparison.OrdinalIgnoreCase));
 
+    // Pro-Tab Dateilisten (CCM Client / CCMSetup / PSADT)
+    public List<LogFileInfo> CcmLogFiles =>
+        LogFiles.Where(f => f.Source == "CCM").ToList();
+
+    public List<LogFileInfo> CcmSetupLogFiles =>
+        LogFiles.Where(f => f.Source == "CCMSetup").ToList();
+
+    public List<LogFileInfo> PsadtLogFiles =>
+        LogFiles.Where(f => f.Source == "PSADT").ToList();
+
+    public int CcmLogCount => CcmLogFiles.Count;
+    public int CcmSetupLogCount => CcmSetupLogFiles.Count;
+    public int PsadtLogCount => PsadtLogFiles.Count;
+
     partial void OnFilterChanged(string value) => OnPropertyChanged(nameof(FilteredEntries));
     partial void OnEntriesChanged(List<LogEntry> value) => OnPropertyChanged(nameof(FilteredEntries));
+
+    partial void OnLogFilesChanged(List<LogFileInfo> value)
+    {
+        OnPropertyChanged(nameof(CcmLogFiles));
+        OnPropertyChanged(nameof(CcmSetupLogFiles));
+        OnPropertyChanged(nameof(PsadtLogFiles));
+        OnPropertyChanged(nameof(CcmLogCount));
+        OnPropertyChanged(nameof(CcmSetupLogCount));
+        OnPropertyChanged(nameof(PsadtLogCount));
+    }
 
     [RelayCommand]
     private async Task LoadLogFilesAsync()
