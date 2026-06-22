@@ -21,7 +21,9 @@ Built for Workplace Engineers who need a fast, modern tool to inspect and manage
 | **Hardware** | System, CPU, RAM slots, GPU, Disks, OS with full UBR build number |
 | **Software** | Installed apps with filter and install date |
 | **Actions** | Trigger CM policies (Machine Policy, HW/SW Inventory, Updates, Discovery) |
-| **Tools** | Clear CCM cache, Client repair/reinstall, Pending reboot, CCM Applications |
+| **Software Center** | Applications (Install/Repair/Uninstall) and Operating Systems (Task Sequences, incl. OSD with high-impact confirmation dialog) |
+| **Updates** | All Updates / Pending Updates, with per-update Install action |
+| **Tools** | Clear CCM cache, Client repair/reinstall, Pending reboot |
 | **Logs** | CCM log viewer with CMTrace format parsing, filter, color-coded severity |
 
 ## Requirements
