@@ -62,7 +62,7 @@ dotnet run --project src/CMClientCenter.App --arch x64
 - [ ] AgentStatusPage: Health-Checks vorhanden (Service/Client/Network/Cache/Inventory/Updates/System) — Vollständigkeit gegenüber dem Original-Tool noch nicht final verifiziert
 - [ ] HardwarePage: Disk-Liste ist im Model (`HardwareInfo.Disks`) vorhanden, aber noch nicht im XAML dargestellt
 - [ ] Unit Tests für Executors (mit Mock-Runspace) — `tests/CMClientCenter.Core.Tests` und `tests/CMClientCenter.PowerShell.Tests` sind als Projekt-Scaffold angelegt, enthalten aber noch keine Tests
-- [ ] Console-Seite: Output-Panel-Breite (Drag-Splitter) wird nicht in `AppSettings` persistiert — nach Neustart wieder Standardbreite (420px)
+- [x] Console-Seite: Output-Panel-Breite (Drag-Splitter) wird nicht in `AppSettings` persistiert — nach Neustart wieder Standardbreite (420px)
 
 ## WMI-Namespaces (Referenz)
 
@@ -72,12 +72,13 @@ dotnet run --project src/CMClientCenter.App --arch x64
 | ROOT\ccm\clientsdk         | CCM_ClientUtilities, CCM_SoftwareUpdate, CCM_Program (Task Sequences, gefiltert auf `TaskSequence=True` — `CCM_TaskSequence` existiert in diesem Environment nicht) |
 | ROOT\ccm\SoftMgmtAgent     | CacheConfig (Size bereits in MB — **nicht** durch 1024 teilen) |
 | ROOT\ccm\SoftwareUpdates\UpdatesStore | CCM_UpdateStatus (Scan-History, **nicht** dedupliziert — `Group-Object` nach Title+RevisionNumber+Status mit neuestem ScanTime nötig) |
-| ROOT\ccm\locationservices  | SMS_MPInformation (SiteCode lesen — `SMS_Client.AssignedSite` ist in diesem Environment leer) |
+| ROOT\ccm\locationservices  | SMS_MPInformation (Fallback-Quelle für SiteCode/MP, falls `SMS_Client.AssignedSite` leer ist) |
 | ROOT\ccm\policy\machine\.. | CCM_Authority (für Management Point)      |
 
-**Environment-spezifische Eigenheiten** (TT1, VSRV-SCCM-002.TINUTEST.LOCAL) — gelten ggf. nicht überall, aber hier verifiziert:
-- `CCM_Client` exponiert hier kein `ClientVersion` → `SMS_Client.ClientVersion` verwenden
+**Allgemeine WMI/CIM-Hinweise** (nicht standortspezifisch — gelten unabhängig von Site Code oder Management Point):
+- `ClientVersion` über `SMS_Client` lesen, nicht über `CCM_Client` — `SMS_Client.ClientVersion` ist die von Microsoft dokumentierte Standard-Property dafür; `CCM_Client` ist für anderes gedacht (Health-/Installations-Status) und führt `ClientVersion` nicht zuverlässig
 - `EnforcePreference`-CIM-Methodenparameter muss als `UInt32` typisiert sein
+- Site Code und Management Point werden **immer zur Laufzeit ermittelt, nie hartcodiert**: `SMS_Client.AssignedSite` zuerst versuchen, falls leer (kommt je nach Client-Installationsart vor) auf `SMS_MPInformation.SiteCode`/`.MP` zurückfallen (siehe `Get-CMAgentStatus.ps1`). `TT1` / `VSRV-SCCM-002.TINUTEST.LOCAL` in früheren Notizen waren nur Beispielwerte aus der Entwicklungsumgebung, nicht Teil des Codes.
 
 ## WinRM / PowerShell-Serialisierung
 

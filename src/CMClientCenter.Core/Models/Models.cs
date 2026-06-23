@@ -235,6 +235,13 @@ public record AppSettings
     // ("Run PS" in the old Client Center for Configuration Manager).
     // Empty/null means: use AppSettingsService.DefaultScriptsFolder.
     public string? ScriptsFolder { get; init; }
+
+    // Width (in pixels) of the "Script Output" panel on the Console page,
+    // set by dragging OutputSplitter. Null means: use the default (420px)
+    // hardcoded in ConsolePage.xaml — only written once the user actually
+    // drags the splitter, so a fresh install still gets the XAML default
+    // without this needing a matching default value here.
+    public double? ConsoleOutputColumnWidth { get; init; }
 }
 
 // A .ps1 file discovered for the "Console" page's "Run PS" list — either a

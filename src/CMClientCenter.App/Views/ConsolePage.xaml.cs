@@ -29,6 +29,16 @@ public sealed partial class ConsolePage : Page
 
         ScriptsFolderText.Text = _settingsService.EffectiveScriptsFolder;
 
+        // Restore the output panel width from a previous session, if the user
+        // ever dragged the splitter — otherwise the 420px default already set
+        // in ConsolePage.xaml's OutputColumn definition stays untouched.
+        if (_settingsService.Current.ConsoleOutputColumnWidth is { } savedWidth)
+        {
+            var clamped = Math.Clamp(savedWidth, MinOutputColumnWidth, MaxOutputColumnWidth);
+            OutputColumn.Width        = new GridLength(clamped);
+            _currentOutputColumnWidth = clamped;
+        }
+
         RefreshButton.Click          += async (_, _) => await ViewModel.RefreshScriptsCommand.ExecuteAsync(null);
         OpenConsoleButton.Click      += (_, _) => ViewModel.OpenConsoleCommand.Execute(null);
         ClearOutputButton.Click      += (_, _) => OutputText.Text = "";
@@ -174,6 +184,7 @@ public sealed partial class ConsolePage : Page
     private bool _isDraggingSplitter;
     private double _dragStartPointerX;
     private double _dragStartColumnWidth;
+    private double _currentOutputColumnWidth = 420; // kept in sync with OutputColumn.Width while dragging
 
     private const double MinOutputColumnWidth = 260;
     private const double MaxOutputColumnWidth = 900;
@@ -205,13 +216,36 @@ public sealed partial class ConsolePage : Page
         var newWidth = _dragStartColumnWidth - deltaX;
         newWidth     = Math.Clamp(newWidth, MinOutputColumnWidth, MaxOutputColumnWidth);
 
-        OutputColumn.Width = new GridLength(newWidth);
+        OutputColumn.Width        = new GridLength(newWidth);
+        _currentOutputColumnWidth = newWidth;
     }
 
-    private void OutputSplitter_PointerReleased(object sender, PointerRoutedEventArgs e)
+    private async void OutputSplitter_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
         _isDraggingSplitter = false;
         OutputSplitter.ReleasePointerCapture(e.Pointer);
         ProtectedCursor = null;
+
+        // Skip the write if nothing actually changed (e.g. a plain click on
+        // the splitter with no drag) — no point touching the settings file
+        // for a no-op.
+        if (_settingsService.Current.ConsoleOutputColumnWidth == _currentOutputColumnWidth)
+            return;
+
+        // Persist only on release, not on every PointerMoved — dragging fires
+        // far too many move events to write the settings file on each one.
+        // Use the value we tracked during PointerMoved rather than
+        // OutputColumn.ActualWidth, since the layout pass that updates
+        // ActualWidth isn't guaranteed to have run yet at this exact point.
+        var updated = _settingsService.Current with { ConsoleOutputColumnWidth = _currentOutputColumnWidth };
+        try
+        {
+            await _settingsService.SaveAsync(updated);
+        }
+        catch
+        {
+            // Non-critical — worst case the chosen width just isn't remembered
+            // next time; not worth bothering the user with an error for this.
+        }
     }
 }
