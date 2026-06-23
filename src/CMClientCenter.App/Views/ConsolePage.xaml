@@ -34,103 +34,147 @@
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
         </Style>
     </Page.Resources>
-    <ScrollViewer Padding="0,0,16,16">
-        <StackPanel Spacing="12">
-            <Grid>
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <TextBlock Text="Console" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center"/>
-                <Button Grid.Column="1" Content="Refresh Scripts" x:Name="RefreshButton"/>
-            </Grid>
+    <Grid Padding="0,0,16,16" ColumnSpacing="0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition x:Name="OutputColumn" Width="420"/>
+        </Grid.ColumnDefinitions>
 
-            <InfoBar x:Name="NotConnectedBar" IsOpen="True" IsClosable="False"
-                     Severity="Warning" Message="Please connect to a computer first."/>
-
-            <InfoBar x:Name="ErrorBar" IsOpen="False" Severity="Error" IsClosable="True"/>
-            <ProgressBar x:Name="LoadingBar" IsIndeterminate="True" Visibility="Collapsed"/>
-
-            <!-- Open Console -->
-            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1" CornerRadius="8" Padding="16">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Open Console" Style="{StaticResource SubtitleTextBlockStyle}"/>
-                    <TextBlock Text="Opens an interactive PowerShell remote session (Enter-PSSession) to the connected computer in a new window."
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12" TextWrapping="Wrap"/>
-                    <Button Content="Open Console" x:Name="OpenConsoleButton" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Left"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Run PS — Built-in -->
-            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1" CornerRadius="8" Padding="16">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Run PS — Built-in Scripts" Style="{StaticResource SubtitleTextBlockStyle}"/>
-                    <TextBlock Text="Scripts shipped with the app (originally from &quot;Client Center for Configuration Manager&quot;). Read-only by convention — edit the files in the PSScripts folder if you need to change one."
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12" TextWrapping="Wrap"/>
-
-                    <ListView x:Name="BuiltinScriptsList" MaxHeight="320" SelectionMode="None"
-                              ItemContainerStyle="{StaticResource ScriptListViewItemStyle}"
-                              ItemTemplate="{StaticResource ScriptItemTemplate}">
-                        <ListView.GroupStyle>
-                            <GroupStyle HidesIfEmpty="True" HeaderTemplate="{StaticResource ScriptGroupHeaderTemplate}"/>
-                        </ListView.GroupStyle>
-                    </ListView>
-
-                    <TextBlock x:Name="NoBuiltinScriptsText" Text="No built-in scripts found." Visibility="Collapsed"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Run PS — Custom -->
-            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1" CornerRadius="8" Padding="16">
-                <StackPanel Spacing="8">
-                    <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Text="Run PS — Custom Scripts" Style="{StaticResource SubtitleTextBlockStyle}"/>
-                        <Button Grid.Column="1" x:Name="OpenScriptsFolderButton" Content="Open Folder" FontSize="11" Padding="8,4"/>
-                    </Grid>
-                    <TextBlock x:Name="ScriptsFolderText" Text=""
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="11" FontFamily="Consolas"/>
-                    <TextBlock Text="Your own .ps1 scripts. Subfolders are grouped automatically. Click Run to execute against the connected computer."
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12" TextWrapping="Wrap"/>
-
-                    <ListView x:Name="CustomScriptsList" MaxHeight="320" SelectionMode="None"
-                              ItemContainerStyle="{StaticResource ScriptListViewItemStyle}"
-                              ItemTemplate="{StaticResource ScriptItemTemplate}">
-                        <ListView.GroupStyle>
-                            <GroupStyle HidesIfEmpty="True" HeaderTemplate="{StaticResource ScriptGroupHeaderTemplate}"/>
-                        </ListView.GroupStyle>
-                    </ListView>
-
-                    <TextBlock x:Name="NoCustomScriptsText" Text="No scripts found." Visibility="Collapsed"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Output -->
-            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1" CornerRadius="8" Padding="12">
-                <Grid RowSpacing="6">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="200"/>
-                    </Grid.RowDefinitions>
-                    <Grid Grid.Row="0">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Text="Script Output" Style="{StaticResource CaptionTextBlockStyle}"
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
-                        <Button Grid.Column="1" x:Name="ClearOutputButton" Content="Clear" FontSize="11" Padding="8,4"/>
-                    </Grid>
-                    <ScrollViewer Grid.Row="1">
-                        <TextBlock x:Name="OutputText" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap"
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                    </ScrollViewer>
+        <!-- Left: header, banners, Open Console, script lists — scrolls independently -->
+        <ScrollViewer Grid.Column="0" Margin="0,0,16,0">
+            <StackPanel Spacing="12">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <TextBlock Text="Console" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Content="Refresh Scripts" x:Name="RefreshButton"/>
                 </Grid>
-            </Border>
-        </StackPanel>
-    </ScrollViewer>
+
+                <InfoBar x:Name="NotConnectedBar" IsOpen="True" IsClosable="False"
+                         Severity="Warning" Message="Please connect to a computer first."/>
+
+                <InfoBar x:Name="ErrorBar" IsOpen="False" Severity="Error" IsClosable="True"/>
+                <ProgressBar x:Name="LoadingBar" IsIndeterminate="True" Visibility="Collapsed"/>
+
+                <!-- Open Console -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="16">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Open Console" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                        <TextBlock Text="Opens an interactive PowerShell remote session (Enter-PSSession) to the connected computer in a new window."
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12" TextWrapping="Wrap"/>
+                        <Button Content="Open Console" x:Name="OpenConsoleButton" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Run PS — Built-in -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="16">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Run PS — Built-in Scripts" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                        <TextBlock Text="Scripts shipped with the app (originally from &quot;Client Center for Configuration Manager&quot;). Read-only by convention — edit the files in the PSScripts folder if you need to change one."
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12" TextWrapping="Wrap"/>
+
+                        <ListView x:Name="BuiltinScriptsList" MaxHeight="320" SelectionMode="None"
+                                  ItemContainerStyle="{StaticResource ScriptListViewItemStyle}"
+                                  ItemTemplate="{StaticResource ScriptItemTemplate}">
+                            <ListView.GroupStyle>
+                                <GroupStyle HidesIfEmpty="True" HeaderTemplate="{StaticResource ScriptGroupHeaderTemplate}"/>
+                            </ListView.GroupStyle>
+                        </ListView>
+
+                        <TextBlock x:Name="NoBuiltinScriptsText" Text="No built-in scripts found." Visibility="Collapsed"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Run PS — Custom -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="16">
+                    <StackPanel Spacing="8">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <TextBlock Text="Run PS — Custom Scripts" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                            <Button Grid.Column="1" x:Name="OpenScriptsFolderButton" Content="Open Folder" FontSize="11" Padding="8,4"/>
+                        </Grid>
+                        <TextBlock x:Name="ScriptsFolderText" Text=""
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="11" FontFamily="Consolas"/>
+                        <TextBlock Text="Your own .ps1 scripts. Subfolders are grouped automatically. Click Run to execute against the connected computer."
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12" TextWrapping="Wrap"/>
+
+                        <ListView x:Name="CustomScriptsList" MaxHeight="320" SelectionMode="None"
+                                  ItemContainerStyle="{StaticResource ScriptListViewItemStyle}"
+                                  ItemTemplate="{StaticResource ScriptItemTemplate}">
+                            <ListView.GroupStyle>
+                                <GroupStyle HidesIfEmpty="True" HeaderTemplate="{StaticResource ScriptGroupHeaderTemplate}"/>
+                            </ListView.GroupStyle>
+                        </ListView>
+
+                        <TextBlock x:Name="NoCustomScriptsText" Text="No scripts found." Visibility="Collapsed"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Drag handle to resize the output panel. A plain Border with pointer
+             event handling — no GridSplitter control is used here, since that
+             requires the separate CommunityToolkit.WinUI package (not a
+             dependency of this project) and has a known crash when combined
+             with a ListView in the same Grid (CommunityToolkit/WindowsCommunityToolkit#4591) —
+             both ListViews live in the column right next to it. -->
+        <Border Grid.Column="1" Width="6" Background="Transparent"
+                x:Name="OutputSplitter"
+                PointerEntered="OutputSplitter_PointerEntered"
+                PointerExited="OutputSplitter_PointerExited"
+                PointerPressed="OutputSplitter_PointerPressed"
+                PointerMoved="OutputSplitter_PointerMoved"
+                PointerReleased="OutputSplitter_PointerReleased">
+            <Border Width="2" Background="{ThemeResource CardStrokeColorDefaultBrush}" HorizontalAlignment="Center"/>
+        </Border>
+
+        <!-- Right: Output — resizable via the splitter, always visible, never
+             requires scrolling past the script lists. RowDefinitions: title bar
+             (Auto), status line (Auto), output text (*  — fills remaining height). -->
+        <Border Grid.Column="2"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1" CornerRadius="8" Padding="12">
+            <Grid RowSpacing="6">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <TextBlock Text="Script Output" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" x:Name="ClearOutputButton" Content="Clear" FontSize="11" Padding="8,4"/>
+                </Grid>
+
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8">
+                    <ProgressRing x:Name="OutputBusyRing" Width="16" Height="16" IsActive="False"/>
+                    <TextBlock x:Name="LastResultText" Text="" FontSize="12"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <ScrollViewer Grid.Row="2" x:Name="OutputScrollViewer">
+                    <!-- TextBox instead of TextBlock: TextBlock can't be selected/copied.
+                         IsReadOnly prevents editing while still allowing selection, Ctrl+C,
+                         and the native right-click "Copy" context menu. Borderless/transparent
+                         so it still looks like plain output text, not an input field. -->
+                    <TextBox x:Name="OutputText" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap"
+                             IsReadOnly="True" AcceptsReturn="True"
+                             BorderThickness="0" Background="Transparent"
+                             ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
 </Page>

@@ -3,8 +3,10 @@ using CMClientCenter.Core.Interfaces;
 using CMClientCenter.Core.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 
 namespace CMClientCenter.App.Views;
 
@@ -49,9 +51,20 @@ public sealed partial class ConsolePage : Page
                     case nameof(ConsoleViewModel.CustomScriptGroups):
                         UpdateScriptsLists();
                         break;
+                    case nameof(ConsoleViewModel.IsBusy):
+                        OutputBusyRing.IsActive = ViewModel.IsBusy;
+                        break;
+                    case nameof(ConsoleViewModel.LastResult):
+                        LastResultText.Text = ViewModel.LastResult ?? "";
+                        break;
                     case nameof(ConsoleViewModel.ScriptOutput):
-                        if (ViewModel.ScriptOutput is { } output)
-                            OutputText.Text = output;
+                        // Output is now in its own always-visible panel (no more
+                        // scrolling past the script lists to see it), but a long
+                        // script's output can still scroll within that panel —
+                        // reset to the top so the start of the new run is visible
+                        // instead of wherever the previous run's scroll position was.
+                        OutputText.Text = ViewModel.ScriptOutput ?? "";
+                        OutputScrollViewer.ChangeView(null, 0, null, true);
                         break;
                 }
             });
@@ -150,5 +163,55 @@ public sealed partial class ConsolePage : Page
         {
             // Non-critical — the path is shown in the UI either way.
         }
+    }
+
+    // --- Output panel resize splitter ---------------------------------------
+    // Plain pointer-event dragging instead of the CommunityToolkit GridSplitter
+    // (see the XAML comment next to OutputSplitter for why). Resizes
+    // OutputColumn directly; the left ScrollViewer's Grid.Column="0" is Width="*"
+    // so it automatically takes whatever space is left.
+
+    private bool _isDraggingSplitter;
+    private double _dragStartPointerX;
+    private double _dragStartColumnWidth;
+
+    private const double MinOutputColumnWidth = 260;
+    private const double MaxOutputColumnWidth = 900;
+
+    private void OutputSplitter_PointerEntered(object sender, PointerRoutedEventArgs e) =>
+        ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.SizeWestEast);
+
+    private void OutputSplitter_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_isDraggingSplitter)
+            ProtectedCursor = null;
+    }
+
+    private void OutputSplitter_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        _isDraggingSplitter   = true;
+        _dragStartPointerX    = e.GetCurrentPoint(this).Position.X;
+        _dragStartColumnWidth = OutputColumn.ActualWidth;
+        OutputSplitter.CapturePointer(e.Pointer);
+    }
+
+    private void OutputSplitter_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_isDraggingSplitter) return;
+
+        // Dragging left grows the output column (mouse moves toward the script
+        // lists), dragging right shrinks it — hence the sign flip.
+        var deltaX   = e.GetCurrentPoint(this).Position.X - _dragStartPointerX;
+        var newWidth = _dragStartColumnWidth - deltaX;
+        newWidth     = Math.Clamp(newWidth, MinOutputColumnWidth, MaxOutputColumnWidth);
+
+        OutputColumn.Width = new GridLength(newWidth);
+    }
+
+    private void OutputSplitter_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        _isDraggingSplitter = false;
+        OutputSplitter.ReleasePointerCapture(e.Pointer);
+        ProtectedCursor = null;
     }
 }
