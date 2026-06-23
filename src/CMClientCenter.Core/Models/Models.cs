@@ -230,6 +230,25 @@ public record CCMSoftwareUpdate(
 public record AppSettings
 {
     public AppTheme Theme { get; init; } = AppTheme.System;
+
+    // Folder scanned by the "Console" page for user-supplied .ps1 scripts
+    // ("Run PS" in the old Client Center for Configuration Manager).
+    // Empty/null means: use AppSettingsService.DefaultScriptsFolder.
+    public string? ScriptsFolder { get; init; }
 }
+
+// A .ps1 file discovered for the "Console" page's "Run PS" list — either a
+// built-in script shipped with the app (PSScripts\ next to the .exe,
+// originally from "Client Center for Configuration Manager", read-only by
+// convention) or a user-supplied one from AppSettings.ScriptsFolder.
+// Subfolders are scanned recursively in both locations, mirroring the old
+// tool's grouped script list.
+public record CustomScriptInfo(
+    string Name,
+    string FullPath,
+    DateTime LastModified,
+    string GroupName,   // relative subfolder path, e.g. "DO\Reboot" — "(Root)" for top-level scripts
+    bool IsBuiltin       // true = from PSScripts\ (shipped, read-only), false = from the user's ScriptsFolder
+);
 
 

@@ -22,9 +22,13 @@ public class AppSettingsService : IAppSettingsService
     };
 
     private readonly string _settingsPath;
+    private readonly string _defaultScriptsFolder;
     private readonly ILogger<AppSettingsService> _logger;
 
     public AppSettings Current { get; private set; }
+
+    public string EffectiveScriptsFolder =>
+        string.IsNullOrWhiteSpace(Current.ScriptsFolder) ? _defaultScriptsFolder : Current.ScriptsFolder;
 
     public event EventHandler<AppSettings>? SettingsChanged;
 
@@ -36,8 +40,9 @@ public class AppSettingsService : IAppSettingsService
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "CMClientCenter");
 
-        _settingsPath = Path.Combine(folder, "settings.json");
-        Current       = Load(folder);
+        _settingsPath         = Path.Combine(folder, "settings.json");
+        _defaultScriptsFolder = Path.Combine(folder, "Scripts");
+        Current                = Load(folder);
     }
 
     private AppSettings Load(string folder)

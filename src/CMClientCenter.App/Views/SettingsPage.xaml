@@ -21,6 +21,17 @@
         <Button x:Name="RestartBarCloseButton" Content="Restart now" Click="RestartBar_Close_Click"
                 HorizontalAlignment="Left" Visibility="Collapsed"/>
 
+        <StackPanel Spacing="4">
+            <TextBlock Text="Scripts folder (Console → Run PS)" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBox Grid.Column="0" x:Name="ScriptsFolderBox" IsReadOnly="True"/>
+                <Button Grid.Column="1" x:Name="BrowseScriptsFolderButton" Content="Browse..."/>
+            </Grid>
+            <TextBlock Text="Custom .ps1 files placed here appear on the Console page under &quot;Run PS&quot;."
+                       FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+        </StackPanel>
+
         <TextBlock Text="TODO: WinRM timeout, credential storage" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
     </StackPanel>
 </Page>

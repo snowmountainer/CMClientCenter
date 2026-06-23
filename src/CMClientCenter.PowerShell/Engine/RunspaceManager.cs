@@ -64,6 +64,39 @@ public class RunspaceManager(ILogger<RunspaceManager> logger)
         }
     }
 
+    /// <summary>
+    /// Like InvokeAsync, but also surfaces the PowerShell error stream in the
+    /// result instead of only logging it — used by the "Console" page's
+    /// "Run PS" feature, where arbitrary user-supplied scripts run and any
+    /// errors need to be visible to the person who wrote the script, not just
+    /// in the app's debug log.
+    /// </summary>
+    public async Task<(List<System.Management.Automation.PSObject> Output, List<string> Errors)> InvokeRawAsync(
+        string script, CancellationToken ct = default)
+    {
+        if (_current is null || !_current.IsOpen)
+            throw new InvalidOperationException("No active runspace. Please connect first.");
+
+        await _lock.WaitAsync(ct);
+        try
+        {
+            using var ps = System.Management.Automation.PowerShell.Create();
+            ps.Runspace = _current.Runspace;
+            ps.AddScript(script);
+            var results = await ps.InvokeAsync().WaitAsync(ct);
+
+            var errors = ps.Streams.Error.Select(e => e.ToString()).ToList();
+            if (ps.HadErrors)
+                logger.LogWarning("PS errors: {Errors}", string.Join("; ", errors));
+
+            return ([.. results], errors);
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (_current is not null)

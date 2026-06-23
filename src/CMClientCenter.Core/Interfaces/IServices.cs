@@ -83,7 +83,37 @@ public interface IUpdatesService
 public interface IAppSettingsService
 {
     AppSettings Current { get; }
+
+    // Resolved, always-non-empty scripts folder: AppSettings.ScriptsFolder
+    // if set, otherwise %LOCALAPPDATA%\CMClientCenter\Scripts.
+    string EffectiveScriptsFolder { get; }
+
     Task SaveAsync(AppSettings settings, CancellationToken ct = default);
     event EventHandler<AppSettings>? SettingsChanged;
+}
+
+// "Console" page — mirrors the old "Client Center for Configuration Manager"
+// tool's "Open Console" (interactive Enter-PSSession in a new powershell.exe
+// window) and "Run PS" (built-in + user-supplied .ps1 scripts).
+public interface IConsoleService
+{
+    // Opens a new powershell.exe window running Enter-PSSession against the
+    // given host. Uses the current Windows identity (Kerberos/NTLM
+    // pass-through) — no password is stored or re-entered, consistent with
+    // how the existing WinRM connection in RunspaceWrappers.cs behaves when
+    // no explicit credential is supplied.
+    Result OpenConsole(string hostname);
+
+    // Lists *.ps1 files from BOTH sources, newest-first within each group:
+    //   - Built-in:  <app folder>\PSScripts\**  (shipped with the app, read-only)
+    //   - Custom:    IAppSettingsService.EffectiveScriptsFolder\**  (user-supplied)
+    // CustomScriptInfo.IsBuiltin distinguishes the two for the UI's grouping.
+    Task<Result<List<CustomScriptInfo>>> GetCustomScriptsAsync(CancellationToken ct = default);
+
+    // Runs a script's content in the *current* runspace/session
+    // (local or the already-connected remote target) — same execution
+    // path as every other PS-Skript-Ausführung in der App, also no separate
+    // process is spawned and the script runs PS 5.1-compatible as required.
+    Task<Result<string>> RunCustomScriptAsync(string scriptPath, CancellationToken ct = default);
 }
 

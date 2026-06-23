@@ -319,3 +319,89 @@ public partial class UpdatesViewModel(IUpdatesService updatesService) : Observab
         IsBusy = false;
     }
 }
+
+// Backs the "Console" page — mirrors the old "Client Center for
+// Configuration Manager" tool's "Open Console" (interactive remote shell in
+// a new window) and "Run PS" (user-supplied .ps1 scripts) buttons.
+// One folder's worth of scripts for the grouped "Run PS" list — a thin
+// wrapper exposing the standard List<T> surface so it binds directly to
+// ListView.ItemsSource via CollectionViewSource, the usual WinUI 3 grouping
+// mechanism (x:Bind / ItemsSource + IsSourceGrouped="True").
+public class ScriptGroup(string key, IEnumerable<CustomScriptInfo> items) : List<CustomScriptInfo>(items)
+{
+    public string Key { get; } = key;
+}
+
+public partial class ConsoleViewModel(
+    IConsoleService consoleService,
+    IConnectionService connectionService) : ObservableObject
+{
+    [ObservableProperty] private List<CustomScriptInfo> _scripts = [];
+    [ObservableProperty] private List<ScriptGroup> _builtinScriptGroups = [];
+    [ObservableProperty] private List<ScriptGroup> _customScriptGroups = [];
+    [ObservableProperty] private bool _isLoading;
+    [ObservableProperty] private bool _isBusy;
+    [ObservableProperty] private string? _errorMessage;
+    [ObservableProperty] private string? _lastResult;
+    [ObservableProperty] private string? _scriptOutput;
+
+    [RelayCommand]
+    private void OpenConsole()
+    {
+        ErrorMessage = null;
+        var host = connectionService.CurrentTarget?.Hostname;
+        if (string.IsNullOrWhiteSpace(host))
+        {
+            ErrorMessage = "Please connect to a computer first.";
+            return;
+        }
+
+        var result = consoleService.OpenConsole(host);
+        if (!result.IsSuccess) ErrorMessage = result.ErrorMessage;
+    }
+
+    [RelayCommand]
+    private async Task RefreshScriptsAsync()
+    {
+        IsLoading = true; ErrorMessage = null;
+        var result = await consoleService.GetCustomScriptsAsync();
+        if (result.IsSuccess)
+        {
+            Scripts = result.Value ?? [];
+
+            // Two separate sources, each grouped by subfolder independently —
+            // shown as two separate cards/ListViews in the UI (clearer than one
+            // list with a combined "Source → Subfolder" header). Groups already
+            // arrive pre-sorted from ConsoleExecutor ("(Root)" first, then
+            // subfolders alphabetically); GroupBy preserves that order.
+            BuiltinScriptGroups = ToGroups(Scripts.Where(s => s.IsBuiltin));
+            CustomScriptGroups  = ToGroups(Scripts.Where(s => !s.IsBuiltin));
+        }
+        else
+        {
+            ErrorMessage = result.ErrorMessage;
+        }
+        IsLoading = false;
+    }
+
+    private static List<ScriptGroup> ToGroups(IEnumerable<CustomScriptInfo> scripts) =>
+        scripts.GroupBy(s => s.GroupName).Select(g => new ScriptGroup(g.Key, g)).ToList();
+
+    [RelayCommand]
+    private async Task RunScriptAsync(string scriptPath)
+    {
+        IsBusy = true; LastResult = null; ScriptOutput = null;
+        var result = await consoleService.RunCustomScriptAsync(scriptPath);
+        if (result.IsSuccess)
+        {
+            LastResult   = "✓ Script finished";
+            ScriptOutput = result.Value;
+        }
+        else
+        {
+            LastResult   = $"✗ {result.ErrorMessage}";
+            ScriptOutput = $"ERROR: {result.ErrorMessage}";
+        }
+        IsBusy = false;
+    }
+}

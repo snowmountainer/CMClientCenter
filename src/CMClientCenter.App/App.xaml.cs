@@ -76,6 +76,7 @@ public partial class App : Application
         services.AddSingleton<ToolsExecutor>();
         services.AddSingleton<SoftwareCenterExecutor>();
         services.AddSingleton<UpdatesExecutor>();
+        services.AddSingleton<ConsoleExecutor>();
 
         // Core Services
         services.AddSingleton<IConnectionService, ConnectionService>();
@@ -89,6 +90,7 @@ public partial class App : Application
         services.AddSingleton<IToolsService>(sp => sp.GetRequiredService<ToolsExecutor>());
         services.AddSingleton<ISoftwareCenterService>(sp => sp.GetRequiredService<SoftwareCenterExecutor>());
         services.AddSingleton<IUpdatesService>(sp => sp.GetRequiredService<UpdatesExecutor>());
+        services.AddSingleton<IConsoleService>(sp => sp.GetRequiredService<ConsoleExecutor>());
 
         // ViewModels
         services.AddTransient<MainViewModel>();
@@ -101,6 +103,7 @@ public partial class App : Application
         services.AddTransient<ToolsViewModel>();
         services.AddTransient<SoftwareCenterViewModel>();
         services.AddTransient<UpdatesViewModel>();
+        services.AddTransient<ConsoleViewModel>();
 
         return services.BuildServiceProvider();
     }

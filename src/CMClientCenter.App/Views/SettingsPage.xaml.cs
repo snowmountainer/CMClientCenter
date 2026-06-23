@@ -34,6 +34,9 @@ public sealed partial class SettingsPage : Page
             }
         }
         _suppressSelectionEvent = false;
+
+        ScriptsFolderBox.Text = _settingsService.EffectiveScriptsFolder;
+        BrowseScriptsFolderButton.Click += async (_, _) => await BrowseForScriptsFolderAsync();
     }
 
     private async void ThemeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -60,6 +63,34 @@ public sealed partial class SettingsPage : Page
             RestartBar.IsOpen = true;
             RestartBarCloseButton.Visibility = Visibility.Visible;
         });
+    }
+
+    /// <summary>
+    /// Lets the user pick the folder scanned by the Console page's "Run PS"
+    /// list. Uses Windows.Storage.Pickers.FolderPicker — in an unpackaged
+    /// desktop app this requires associating the picker with the current
+    /// window's HWND first (WinRT.Interop), unlike in UWP where this is implicit.
+    /// </summary>
+    private async Task BrowseForScriptsFolderAsync()
+    {
+        if (App.MainAppWindow is not { } window) return;
+
+        var folderPicker = new Windows.Storage.Pickers.FolderPicker
+        {
+            SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.ComputerFolder
+        };
+        folderPicker.FileTypeFilter.Add("*");
+
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+        WinRT.Interop.InitializeWithWindow.Initialize(folderPicker, hwnd);
+
+        var folder = await folderPicker.PickSingleFolderAsync();
+        if (folder is null) return; // user cancelled
+
+        var updated = _settingsService.Current with { ScriptsFolder = folder.Path };
+        await _settingsService.SaveAsync(updated);
+
+        _dispatcher.TryEnqueue(() => ScriptsFolderBox.Text = _settingsService.EffectiveScriptsFolder);
     }
 
     private void RestartBar_Close_Click(object sender, RoutedEventArgs e)

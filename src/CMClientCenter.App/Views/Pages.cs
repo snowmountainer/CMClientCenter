@@ -10,4 +10,5 @@ namespace CMClientCenter.App.Views;
 // AgentStatusPage  → AgentStatusPage.xaml / .xaml.cs
 // LogsPage         → LogsPage.xaml / .xaml.cs
 // HardwarePage     → HardwarePage.xaml / .xaml.cs
+// ConsolePage      → ConsolePage.xaml / .xaml.cs
 // SettingsPage     → SettingsPage.xaml / .xaml.cs

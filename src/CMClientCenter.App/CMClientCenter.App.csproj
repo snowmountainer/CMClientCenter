@@ -23,6 +23,18 @@
     <Content Include="CMClientCenter.ico" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Built-in "Run PS" scripts (Console page) — originally from the
+         "Client Center for Configuration Manager" project (Ms-PL), see
+         PSScripts/LICENSE-and-SOURCE.md. Loose files next to the .exe so
+         they can be inspected/edited/replaced without recompiling. -->
+    <Content Include="PSScripts\**\*.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PSScripts\**\*.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\CMClientCenter.Core\CMClientCenter.Core.csproj" />
     <ProjectReference Include="..\CMClientCenter.PowerShell\CMClientCenter.PowerShell.csproj" />
     <ProjectReference Include="..\CMClientCenter.Shared\CMClientCenter.Shared.csproj" />
