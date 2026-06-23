@@ -100,9 +100,14 @@ public sealed partial class LogsPage : Page
     // the user isn't left looking at a file from another source.
     private void SourcePivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        CcmLogFileList.Visibility      = SourcePivot.SelectedItem == CcmTab      ? Visibility.Visible : Visibility.Collapsed;
-        CcmSetupLogFileList.Visibility = SourcePivot.SelectedItem == CcmSetupTab ? Visibility.Visible : Visibility.Collapsed;
-        PsadtLogFileList.Visibility    = SourcePivot.SelectedItem == PsadtTab    ? Visibility.Visible : Visibility.Collapsed;
+        // Cast to PivotItem (rather than comparing as object) — same reference
+        // comparison either way since PivotItem doesn't override ==/Equals, but
+        // explicit about intent and avoids CS0252's "did you mean a value
+        // comparison?" warning.
+        var selected = SourcePivot.SelectedItem as PivotItem;
+        CcmLogFileList.Visibility      = selected == CcmTab      ? Visibility.Visible : Visibility.Collapsed;
+        CcmSetupLogFileList.Visibility = selected == CcmSetupTab ? Visibility.Visible : Visibility.Collapsed;
+        PsadtLogFileList.Visibility    = selected == PsadtTab    ? Visibility.Visible : Visibility.Collapsed;
 
         CcmLogFileList.SelectedItem      = null;
         CcmSetupLogFileList.SelectedItem = null;

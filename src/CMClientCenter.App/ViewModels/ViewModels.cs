@@ -211,11 +211,11 @@ public partial class LogsViewModel(ILogService logService) : ObservableObject
 
 public partial class ToolsViewModel(IToolsService toolsService) : ObservableObject
 {
-    [ObservableProperty] private CCMToolsInfo? _toolsInfo;
-    [ObservableProperty] private bool _isLoading;
-    [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private string? _errorMessage;
-    [ObservableProperty] private string? _lastResult;
+    [ObservableProperty] public partial CCMToolsInfo? ToolsInfo { get; set; }
+    [ObservableProperty] public partial bool IsLoading { get; set; }
+    [ObservableProperty] public partial bool IsBusy { get; set; }
+    [ObservableProperty] public partial string? ErrorMessage { get; set; }
+    [ObservableProperty] public partial string? LastResult { get; set; }
 
     [RelayCommand]
     private async Task RefreshAsync()
@@ -242,12 +242,12 @@ public partial class ToolsViewModel(IToolsService toolsService) : ObservableObje
 // (Task Sequences, see Get-CCMTaskSequences.ps1 / CCM_Program).
 public partial class SoftwareCenterViewModel(ISoftwareCenterService softwareCenterService) : ObservableObject
 {
-    [ObservableProperty] private List<CCMApplication> _applications = [];
-    [ObservableProperty] private List<CCMTaskSequence> _taskSequences = [];
-    [ObservableProperty] private bool _isLoading;
-    [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private string? _errorMessage;
-    [ObservableProperty] private string? _lastResult;
+    [ObservableProperty] public partial List<CCMApplication> Applications { get; set; } = [];
+    [ObservableProperty] public partial List<CCMTaskSequence> TaskSequences { get; set; } = [];
+    [ObservableProperty] public partial bool IsLoading { get; set; }
+    [ObservableProperty] public partial bool IsBusy { get; set; }
+    [ObservableProperty] public partial string? ErrorMessage { get; set; }
+    [ObservableProperty] public partial string? LastResult { get; set; }
 
     [RelayCommand]
     private async Task RefreshAsync()
@@ -291,11 +291,11 @@ public partial class SoftwareCenterViewModel(ISoftwareCenterService softwareCent
 // the text filter boxes elsewhere — no separate load/service call needed.
 public partial class UpdatesViewModel(IUpdatesService updatesService) : ObservableObject
 {
-    [ObservableProperty] private List<CCMSoftwareUpdate> _updates = [];
-    [ObservableProperty] private bool _isLoading;
-    [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private string? _errorMessage;
-    [ObservableProperty] private string? _lastResult;
+    [ObservableProperty] public partial List<CCMSoftwareUpdate> Updates { get; set; } = [];
+    [ObservableProperty] public partial bool IsLoading { get; set; }
+    [ObservableProperty] public partial bool IsBusy { get; set; }
+    [ObservableProperty] public partial string? ErrorMessage { get; set; }
+    [ObservableProperty] public partial string? LastResult { get; set; }
 
     [RelayCommand]
     private async Task RefreshAsync()
@@ -336,14 +336,14 @@ public partial class ConsoleViewModel(
     IConsoleService consoleService,
     IConnectionService connectionService) : ObservableObject
 {
-    [ObservableProperty] private List<CustomScriptInfo> _scripts = [];
-    [ObservableProperty] private List<ScriptGroup> _builtinScriptGroups = [];
-    [ObservableProperty] private List<ScriptGroup> _customScriptGroups = [];
-    [ObservableProperty] private bool _isLoading;
-    [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private string? _errorMessage;
-    [ObservableProperty] private string? _lastResult;
-    [ObservableProperty] private string? _scriptOutput;
+    [ObservableProperty] public partial List<CustomScriptInfo> Scripts { get; set; } = [];
+    [ObservableProperty] public partial List<ScriptGroup> BuiltinScriptGroups { get; set; } = [];
+    [ObservableProperty] public partial List<ScriptGroup> CustomScriptGroups { get; set; } = [];
+    [ObservableProperty] public partial bool IsLoading { get; set; }
+    [ObservableProperty] public partial bool IsBusy { get; set; }
+    [ObservableProperty] public partial string? ErrorMessage { get; set; }
+    [ObservableProperty] public partial string? LastResult { get; set; }
+    [ObservableProperty] public partial string? ScriptOutput { get; set; }
 
     [RelayCommand]
     private void OpenConsole()
