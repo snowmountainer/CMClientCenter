@@ -1,0 +1,24 @@
+<Project>
+  <!--
+    Applies to every project in the solution automatically (MSBuild convention:
+    any Directory.Build.props found by walking up from a project's folder is
+    imported implicitly, no <Import> needed in the .csproj files).
+
+    Slim release builds: only ship .NET/library satellite resource assemblies
+    (localized strings for things like System.CommandLine, FluentValidation,
+    etc., if any package pulls them in) for these languages instead of every
+    language the underlying packages support.
+
+    KNOWN LIMITATION: this property is NOT honored for the Windows App SDK's
+    own resources when WindowsAppSDKSelfContained=true and WindowsPackageType=
+    None (our deployment model) — see microsoft/WindowsAppSDK#4288. Those
+    WinAppSDK resource files still ship for every language WinAppSDK supports,
+    regardless of this setting. This property still trims whatever it can
+    (CommunityToolkit.Mvvm, Microsoft.Extensions.*, Microsoft.PowerShell.SDK,
+    and anything else with satellite assemblies), so it's worth keeping even
+    though it doesn't fully solve the "EN/DE/FR/IT only" goal on its own.
+  -->
+  <PropertyGroup>
+    <SatelliteResourceLanguages>en;de;fr;it</SatelliteResourceLanguages>
+  </PropertyGroup>
+</Project>

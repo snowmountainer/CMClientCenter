@@ -14,7 +14,7 @@
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <LangVersion>preview</LangVersion>
-    
+
     <!-- Verhindert doppelten Program/Main durch WinUI-Codegenerator -->
     <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <ApplicationIcon>CMClientCenter.ico</ApplicationIcon>
