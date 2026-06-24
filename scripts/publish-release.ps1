@@ -52,7 +52,7 @@ $publishDir = Join-Path $repoRoot "publish\CMClientCenter-$Version-win-x64"
 $zipPath    = Join-Path $repoRoot "publish\CMClientCenter-$Version-win-x64.zip"
 
 if (-not (Test-Path $appProject)) {
-    throw "Could not find $appProject — run this script from its own location inside the repo (scripts\publish-release.ps1) so `$repoRoot resolves correctly."
+    throw "Could not find $appProject run this script from its own location inside the repo (scripts\publish-release.ps1) so `$repoRoot resolves correctly."
 }
 
 Write-Host "==> Publishing CMClientCenter $Version ($Configuration, win-x64, self-contained, unpackaged)" -ForegroundColor Cyan
@@ -80,14 +80,14 @@ dotnet publish $appProject `
     --output $publishDir
 
 if ($LASTEXITCODE -ne 0) {
-    throw "dotnet publish failed with exit code $LASTEXITCODE — see output above."
+    throw "dotnet publish failed with exit code $LASTEXITCODE see output above."
 }
 
 # --- Sanity checks ---------------------------------------------------------
 
 $exePath = Join-Path $publishDir "CMClientCenter.exe"
 if (-not (Test-Path $exePath)) {
-    throw "Publish finished but CMClientCenter.exe is missing from $publishDir — something is wrong with the publish profile."
+    throw "Publish finished but CMClientCenter.exe is missing from $publishDir something is wrong with the publish profile."
 }
 
 $psScriptsDir = Join-Path $publishDir "PSScripts"
@@ -96,7 +96,7 @@ $scriptCount  = if (Test-Path $psScriptsDir) {
 } else { 0 }
 
 if ($scriptCount -eq 0) {
-    Write-Warning "PSScripts folder is missing or has no .ps1 files in the publish output — the Console page's built-in script library will be empty. Check the <Content Include=`"PSScripts\**\*.ps1`"> item in CMClientCenter.App.csproj."
+    Write-Warning "PSScripts folder is missing or has no .ps1 files in the publish output  the Console page's built-in script library will be empty. Check the <Content Include=`"PSScripts\**\*.ps1`"> item in CMClientCenter.App.csproj."
 } else {
     Write-Host "==> PSScripts: $scriptCount built-in script(s) included" -ForegroundColor Green
 }
@@ -117,4 +117,4 @@ Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
 Write-Host "  1. Smoke-test: run $exePath on a clean-ish machine/VM (one that doesn't already have the Windows App SDK runtime installed, to catch missing-dependency issues)."
 Write-Host "  2. Create a GitHub Release tagged v$Version and attach $zipPath as a release asset."
-Write-Host "  3. Do NOT commit the publish\ folder to the repo — it's build output, not source (see .gitignore)."
+Write-Host "  3. Do NOT commit the publish\ folder to the repo  it's build output, not source (see .gitignore)."
