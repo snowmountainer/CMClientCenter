@@ -24,10 +24,66 @@ public class LocalRunspace(ILogger logger) : IRunspaceWrapper
     public Runspace Runspace => _runspace ?? throw new InvalidOperationException("Runspace not open");
     public bool IsOpen => _runspace?.RunspaceStateInfo.State == RunspaceState.Opened;
 
+    // Self-contained dotnet publish puts the PowerShell SDK's built-in
+    // modules (CimCmdlets, Microsoft.PowerShell.Management, ...) under
+    // runtimes\win\lib\<tfm>\Modules instead of next to S.M.A.dll, where the
+    // engine actually looks for them by default — a known, still-unresolved
+    // PowerShell SDK issue with self-contained deployments
+    // (PowerShell/PowerShell#15274). Without this, Get-CimInstance and
+    // friends fail with "module could not be loaded" only in the published
+    // app, never in a normal `dotnet build`/F5 debug session, since that
+    // build layout resolves the modules differently.
+    //
+    // Static + lazy: the first LocalRunspace to open patches PSModulePath
+    // for the whole process; subsequent runspaces (local or remote — remote
+    // PowerShell runs on the target machine, unaffected by this) just reuse it.
+    private static bool _psModulePathPatched;
+
+    private void EnsureSelfContainedModulePath()
+    {
+        if (_psModulePathPatched) return;
+        _psModulePathPatched = true;
+
+        try
+        {
+            var libRoot = System.IO.Path.Combine(AppContext.BaseDirectory, "runtimes", "win", "lib");
+            var candidateDirs = System.IO.Directory.Exists(libRoot)
+                ? System.IO.Directory.GetDirectories(libRoot) // net10.0, net9.0, ... — whatever TFM the SDK package actually unpacked
+                : [];
+
+            var modulesDir = candidateDirs
+                .Select(d => System.IO.Path.Combine(d, "Modules"))
+                .FirstOrDefault(System.IO.Directory.Exists);
+
+            if (modulesDir is null)
+            {
+                logger.LogDebug("No runtimes\\win\\lib\\*\\Modules folder found next to the app — " +
+                    "not a self-contained PowerShell SDK deployment, or already on PSModulePath; nothing to patch.");
+                return;
+            }
+
+            var current = Environment.GetEnvironmentVariable("PSModulePath") ?? "";
+            if (current.Contains(modulesDir, StringComparison.OrdinalIgnoreCase))
+                return;
+
+            var updated = string.IsNullOrEmpty(current) ? modulesDir : $"{modulesDir};{current}";
+            Environment.SetEnvironmentVariable("PSModulePath", updated);
+            logger.LogInformation("Patched PSModulePath for self-contained deployment: prepended {Dir}", modulesDir);
+        }
+        catch (Exception ex)
+        {
+            // Non-fatal — worst case CimCmdlets etc. stay unavailable, same
+            // as before this fix existed.
+            logger.LogWarning(ex, "Failed to patch PSModulePath for self-contained deployment");
+        }
+    }
+
     public async Task<Result<RunspaceInitResult>> OpenAsync(CancellationToken ct = default)
     {
         try
         {
+            EnsureSelfContainedModulePath();
+
             _runspace = RunspaceFactory.CreateRunspace();
             _runspace.Open();
             string? osVer = null, psVer = null;

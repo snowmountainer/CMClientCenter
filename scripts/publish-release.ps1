@@ -8,9 +8,9 @@
     Runs `dotnet publish` for the App project only (Core/PowerShell/Shared
     are pulled in automatically via project references — they are NOT meant
     to be published as their own apps). The output folder is everything an
-    end user needs to run the app: CMClientCenter.exe, its DLLs, the Windows
-    App SDK runtime files (bundled in via WindowsAppSDKSelfContained), and
-    the PSScripts\ folder with the built-in "Run PS" script library.
+    end user needs to run the app: CMClientCenter.App.exe, its DLLs, the
+    Windows App SDK runtime files (bundled in via WindowsAppSDKSelfContained),
+    and the PSScripts\ folder with the built-in "Run PS" script library.
 
     Requires the .NET SDK and the Windows App SDK / Windows 10/11 SDK
     components (Visual Studio 2022 with the "Windows application
@@ -85,9 +85,9 @@ if ($LASTEXITCODE -ne 0) {
 
 # --- Sanity checks ---------------------------------------------------------
 
-$exePath = Join-Path $publishDir "CMClientCenter.exe"
+$exePath = Join-Path $publishDir "CMClientCenter.App.exe"
 if (-not (Test-Path $exePath)) {
-    throw "Publish finished but CMClientCenter.exe is missing from $publishDir something is wrong with the publish profile."
+    throw "Publish finished but CMClientCenter.App.exe is missing from $publishDir something is wrong with the publish profile."
 }
 
 $psScriptsDir = Join-Path $publishDir "PSScripts"
@@ -105,11 +105,67 @@ $sizeMB = [math]::Round((Get-ChildItem $publishDir -Recurse | Measure-Object -Pr
 Write-Host "==> Publish output: $publishDir ($sizeMB MB)" -ForegroundColor Green
 
 # --- Zip it up --------------------------------------------------------------
+# .pdb files (debug symbols) are excluded from the distributed ZIP to keep it
+# smaller — they stay in $publishDir itself in case you need to debug locally
+# from this exact build. Compress-Archive has no built-in exclude filter, so
+# we stage a temp copy without the .pdb files (and trimmed language folders,
+# see below) instead.
 
 if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
 
+$stagingDir = Join-Path $repoRoot "publish\.staging-$Version"
+if (Test-Path $stagingDir) { Remove-Item $stagingDir -Recurse -Force }
+
+Write-Host "==> Staging release contents (excluding .pdb symbol files)" -ForegroundColor Cyan
+Copy-Item $publishDir $stagingDir -Recurse
+Get-ChildItem $stagingDir -Recurse -Filter *.pdb | Remove-Item -Force
+
+# Windows App SDK ships its own per-language *.mui resource folders (one per
+# language it supports, ~80 of them) regardless of SatelliteResourceLanguages
+# — a known limitation (microsoft/WindowsAppSDK#4288) for
+# WindowsAppSDKSelfContained=true + WindowsPackageType=None builds like this
+# one. There's no supported MSBuild property to limit this at build time, so
+# we trim it here instead. NOT an officially supported approach — if app
+# startup or any WinAppSDK control ever behaves oddly after this, the
+# language-folder trim below is the first thing to suspect; comment out this
+# block to rule it in or out.
+#
+# Deliberately an explicit allow-list of known WinAppSDK language folder
+# names, NOT a regex pattern matching "looks like a language code" — a
+# pattern like that also matches "ref" (the .NET reference-assemblies
+# folder, NOT a language folder) and could delete something the runtime
+# actually needs. List taken from an actual publish output of this project;
+# if a future Windows App SDK version adds new languages, this list (and the
+# $keepLanguageFolders below it) may need a one-time update.
+$allWinAppSdkLanguageFolders = @(
+    "af-ZA","am-ET","ar-SA","as-IN","az-Latn-AZ","bg-BG","bn-IN","bs-Latn-BA",
+    "ca-ES","ca-Es-VALENCIA","cs-CZ","cy-GB","da-DK","de-DE","el-GR","en-GB",
+    "en-us","es-ES","es-MX","et-EE","eu-ES","fa-IR","fi-FI","fil-PH","fr-CA",
+    "fr-FR","ga-IE","gd-gb","gl-ES","gu-IN","he-IL","hi-IN","hr-HR","hu-HU",
+    "hy-AM","id-ID","is-IS","it-IT","ja-JP","ka-GE","kk-KZ","km-KH","kn-IN",
+    "ko-KR","kok-IN","lb-LU","lo-LA","lt-LT","lv-LV","mi-NZ","mk-MK","ml-IN",
+    "mr-IN","ms-MY","mt-MT","nb-NO","ne-NP","nl-NL","nn-NO","or-IN","pa-IN",
+    "pl-PL","pt-BR","pt-PT","quz-PE","ro-RO","ru-RU","sk-SK","sl-SI","sq-AL",
+    "sr-Cyrl-BA","sr-Cyrl-RS","sr-Latn-RS","sv-SE","ta-IN","te-IN","th-TH",
+    "tr-TR","tt-RU","ug-CN","uk-UA","ur-PK","uz-Latn-UZ","vi-VN","zh-CN","zh-TW"
+)
+# .NET/library satellite resource folders use bare two-letter codes (de, fr,
+# it, ...) — Directory.Build.props already limits these to en/de/fr/it at
+# build time, so "de"/"fr"/"it" never even get created; "en" doesn't either
+# since English needs no satellite folder. Nothing further to trim there.
+$keepLanguageFolders = @("en-us", "en-GB", "de-DE", "fr-FR", "it-IT")
+$removedFolders = Get-ChildItem $stagingDir -Directory | Where-Object {
+    $_.Name -in $allWinAppSdkLanguageFolders -and $_.Name -notin $keepLanguageFolders
+}
+if ($removedFolders) {
+    Write-Host "==> Trimming $($removedFolders.Count) Windows App SDK language folder(s) (keeping: $($keepLanguageFolders -join ', '))" -ForegroundColor Cyan
+    $removedFolders | Remove-Item -Recurse -Force
+}
+
 Write-Host "==> Creating $zipPath" -ForegroundColor Cyan
-Compress-Archive -Path "$publishDir\*" -DestinationPath $zipPath -CompressionLevel Optimal
+Compress-Archive -Path "$stagingDir\*" -DestinationPath $zipPath -CompressionLevel Optimal
+
+Remove-Item $stagingDir -Recurse -Force
 
 $zipSizeMB = [math]::Round((Get-Item $zipPath).Length / 1MB, 1)
 Write-Host "==> Done: $zipPath ($zipSizeMB MB)" -ForegroundColor Green
