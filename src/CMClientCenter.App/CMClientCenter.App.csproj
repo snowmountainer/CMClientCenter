@@ -46,6 +46,5 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.*" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.*" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.*" />
-    <PackageReference Include="xunit.v3" Version="3.2.2" />
   </ItemGroup>
 </Project>

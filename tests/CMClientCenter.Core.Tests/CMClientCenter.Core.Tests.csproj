@@ -4,6 +4,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsTestProject>true</IsTestProject>
+    <!-- xunit.v3 test projects are self-contained executables (own console
+         test runner, not just a VSTest adapter target) — required since
+         xunit.v3.core 1.1.0, see github.com/xunit/xunit/issues/3157 -->
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\CMClientCenter.Core\CMClientCenter.Core.csproj" />
