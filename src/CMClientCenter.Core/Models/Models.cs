@@ -242,6 +242,18 @@ public record AppSettings
     // drags the splitter, so a fresh install still gets the XAML default
     // without this needing a matching default value here.
     public double? ConsoleOutputColumnWidth { get; init; }
+
+    // Last-used main window position/size, in physical pixels (AppWindow's
+    // native unit). Null means: no saved geometry yet — MainWindow keeps
+    // its XAML/SDK default size and lets Windows pick the initial position.
+    // Always holds the RESTORED (non-maximized, non-minimized) geometry,
+    // even if the window was maximized when the app closed — that way
+    // toggling out of "maximized" on next launch lands somewhere sensible.
+    public int? WindowX { get; init; }
+    public int? WindowY { get; init; }
+    public int? WindowWidth { get; init; }
+    public int? WindowHeight { get; init; }
+    public bool WindowIsMaximized { get; init; }
 }
 
 // A .ps1 file discovered for the "Console" page's "Run PS" list — either a
