@@ -93,7 +93,11 @@ dotnet run --project src/CMClientCenter.App --arch x64
 - `x:Bind`-Funktionsbindung braucht `IValueConverter` (z.B. `BoolToVisibilityConverter`), implementiert in `Converters/`
 - `AppInstance.Restart()` hat einen `FileNotFoundException`-Bug bei unpackaged self-contained Apps — `Process.Start()` + `Environment.Exit(0)` verwenden
 - `GridSplitter` ist **kein** Bestandteil des nativen Windows App SDK, nur über das separate `CommunityToolkit.WinUI`-Paket — und hat dort einen dokumentierten Absturz in Kombination mit `ListView` im selben `Grid`. Für Resize-Handles stattdessen einen eigenen Pointer-Event-Splitter bauen (siehe `ConsolePage.xaml.cs`)
-- `TextBlock` unterstützt keine Textauswahl/Kopieren — für kopierbaren Read-only-Text eine `TextBox` mit `IsReadOnly="True"`, `BorderThickness="0"`, `Background="Transparent"` verwenden
+- `TextBlock` unterstützt standardmäßig keine Textauswahl/Kopieren:
+  - Für einen einzelnen, zusammenhängenden Ausgabe-Block (z.B. Script-Output, Console-Page) eine `TextBox` mit `IsReadOnly="True"`, `BorderThickness="0"`, `Background="Transparent"` verwenden statt `TextBlock`
+  - Für `TextBlock`s **innerhalb eines `ListView.ItemTemplate`** (mehrspaltiges Zeilen-Layout, z.B. Logs-Page) stattdessen `IsTextSelectionEnabled="True"` direkt auf den jeweiligen `TextBlock`s setzen — das erlaubt Markieren/Strg+C pro Spalte ohne das Grid-Layout (Severity-Farbbalken etc.) zu zerstören. `ListViewBase.IsTextSelectionEnabled` existiert in WinUI 3/Windows App SDK **nicht** (nur UWP-Altlast) — nicht verwenden.
+  - Da `TextBlock.IsTextSelectionEnabled` nur innerhalb eines einzelnen `TextBlock` markierbar macht (kein zeilenübergreifendes Markieren wie bei `TextBox`), zusätzlich einen "Copy All"-Button (kopiert alle gefilterten Zeilen als Tab-separierten Text) und ein Rechtsklick-Kontextmenü "Copy line" pro Zeile anbieten (siehe `LogsPage.xaml(.cs)`)
+  - `Clipboard.SetContent()` (`Windows.ApplicationModel.DataTransfer`) in try/catch wrappen — kann in unpackaged Apps theoretisch `CO_E_NOTINITIALIZED` werfen, falls außerhalb des STA-UI-Threads aufgerufen; `Program.cs` mit `[STAThread]` + synchronem `Main` (bereits vorhanden) ist die eigentliche Absicherung
 
 ## CM Action Schedule IDs
 

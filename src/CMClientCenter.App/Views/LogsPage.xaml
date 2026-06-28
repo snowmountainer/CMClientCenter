@@ -25,6 +25,20 @@
             <Setter Property="Padding" Value="8,6"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
         </Style>
+
+        <!-- Right-click context menu for a single log line. Not attached
+             via FlyoutBase.AttachedFlyout in XAML (items are virtualized/
+             reused, so a per-item flyout would get confused about which
+             entry it belongs to) — instead it's shown imperatively from the
+             RightTapped handler via flyout.ShowAt(...), after resolving the
+             LogEntry under the pointer from the visual tree. -->
+        <MenuFlyout x:Key="EntryContextMenu">
+            <MenuFlyoutItem x:Name="CopyLineMenuItem" Text="Copy line" Click="CopyLineMenuItem_Click">
+                <MenuFlyoutItem.Icon>
+                    <FontIcon Glyph="&#xE8C8;"/>
+                </MenuFlyoutItem.Icon>
+            </MenuFlyoutItem>
+        </MenuFlyout>
     </Page.Resources>
 
     <Grid RowSpacing="8" Padding="0,0,16,16">
@@ -139,6 +153,7 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock x:Name="LogTitle" Text="Logs"
                                Style="{StaticResource SubtitleTextBlockStyle}"
@@ -151,7 +166,9 @@
                         <ComboBoxItem Content="500 lines"/>
                         <ComboBoxItem Content="1000 lines"/>
                     </ComboBox>
-                    <Button Grid.Column="2" Content="Reload"
+                    <Button Grid.Column="2" Content="Copy All" x:Name="CopyAllButton"
+                            Margin="0,0,8,0" Click="CopyAllButton_Click"/>
+                    <Button Grid.Column="3" Content="Reload"
                             x:Name="RefreshLogButton"/>
                 </Grid>
 
@@ -163,7 +180,8 @@
                          PlaceholderText="Filter (message, component…)"
                          TextChanged="FilterBox_TextChanged"/>
 
-                <ListView Grid.Row="4" x:Name="EntriesList" SelectionMode="None">
+                <ListView Grid.Row="4" x:Name="EntriesList" SelectionMode="None"
+                          RightTapped="EntriesList_RightTapped">
                     <ListView.Header>
                         <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -209,11 +227,13 @@
                                            Text="{x:Bind Time}"
                                            FontSize="11" FontFamily="Consolas"
                                            VerticalAlignment="Top"
+                                           IsTextSelectionEnabled="True"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                 <TextBlock Grid.Column="2"
                                            Text="{x:Bind Component}"
                                            FontSize="11"
                                            VerticalAlignment="Top"
+                                           IsTextSelectionEnabled="True"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                            TextTrimming="CharacterEllipsis"
                                            ToolTipService.ToolTip="{x:Bind Component}"/>
@@ -221,6 +241,7 @@
                                            Text="{x:Bind Message}"
                                            FontSize="11" FontFamily="Consolas"
                                            TextWrapping="Wrap"
+                                           IsTextSelectionEnabled="True"
                                            ToolTipService.ToolTip="{x:Bind Message}"/>
                             </Grid>
                         </DataTemplate>

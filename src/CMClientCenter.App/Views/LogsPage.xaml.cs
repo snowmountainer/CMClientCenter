@@ -7,6 +7,8 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using System.Text;
+using Windows.ApplicationModel.DataTransfer;
 
 namespace CMClientCenter.App.Views;
 
@@ -21,6 +23,12 @@ public sealed partial class LogsPage : Page
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
 
     private static readonly int[] _maxLinesOptions = [100, 200, 500, 1000];
+
+    // Set by EntriesList_RightTapped just before the context menu opens, so
+    // CopyLineMenuItem_Click knows which row it applies to. ListView items
+    // are virtualized/reused, so this can't be resolved any other way once
+    // the click actually fires.
+    private LogEntry? _rightTappedEntry;
 
     public LogsPage()
     {
@@ -139,5 +147,79 @@ public sealed partial class LogsPage : Page
     {
         if (MaxLinesBox.SelectedIndex >= 0 && MaxLinesBox.SelectedIndex < _maxLinesOptions.Length)
             ViewModel.MaxLines = _maxLinesOptions[MaxLinesBox.SelectedIndex];
+    }
+
+    // Copies every currently-filtered log entry to the clipboard as plain
+    // tab-separated text (Time, Component, Message — one line each), so the
+    // whole visible log can be pasted into Notepad/Excel/an email at once.
+    // This is the ListView equivalent of "select all + copy" on the
+    // Console page's output TextBox.
+    private void CopyAllButton_Click(object sender, RoutedEventArgs e)
+    {
+        var entries = ViewModel.FilteredEntries.ToList();
+        if (entries.Count == 0) return;
+
+        var sb = new StringBuilder();
+        foreach (var entry in entries)
+            sb.AppendLine($"{entry.Time}\t{entry.Component}\t{entry.Message}");
+
+        CopyToClipboard(sb.ToString());
+    }
+
+    // Right-click on a row: resolve which LogEntry is under the pointer
+    // (walking up from the tapped element to its containing ListViewItem,
+    // since ItemTemplate content doesn't carry the entry directly) and show
+    // the "Copy line" flyout at the pointer position.
+    private void EntriesList_RightTapped(object sender, Microsoft.UI.Xaml.Input.RightTappedRoutedEventArgs e)
+    {
+        if (e.OriginalSource is not FrameworkElement element) return;
+
+        var container = FindContainer(element);
+        if (container?.DataContext is not LogEntry entry) return;
+
+        _rightTappedEntry = entry;
+
+        var flyout = (MenuFlyout)Resources["EntryContextMenu"];
+        flyout.ShowAt(EntriesList, e.GetPosition(EntriesList));
+        e.Handled = true;
+    }
+
+    // Walks up the visual tree from the tapped element until it finds the
+    // ListViewItem container, whose DataContext is the bound LogEntry.
+    private static FrameworkElement? FindContainer(FrameworkElement element)
+    {
+        FrameworkElement? current = element;
+        while (current is not null && current is not ListViewItem)
+            current = VisualTreeHelper.GetParent(current) as FrameworkElement;
+        return current;
+    }
+
+    private void CopyLineMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (_rightTappedEntry is not { } entry) return;
+
+        CopyToClipboard($"{entry.Time}\t{entry.Component}\t{entry.Message}");
+        _rightTappedEntry = null;
+    }
+
+    // Wrapped in try/catch: Clipboard.SetContent is a WinRT API that can
+    // throw CO_E_NOTINITIALIZED in some unpackaged-app edge cases (e.g. if a
+    // future change ever calls this off the UI thread). Main() is already
+    // [STAThread] and synchronous, which is the documented fix, but this
+    // keeps a copy failure from ever crashing the app — it just silently
+    // no-ops, same risk tier as a clipboard write failing on a locked
+    // clipboard in any other Windows app.
+    private void CopyToClipboard(string text)
+    {
+        try
+        {
+            var package = new DataPackage();
+            package.SetText(text);
+            Clipboard.SetContent(package);
+        }
+        catch (Exception)
+        {
+            // Best-effort; nothing the user can act on here.
+        }
     }
 }

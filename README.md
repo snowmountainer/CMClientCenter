@@ -25,7 +25,7 @@ Built for Workplace Engineers who need a fast, modern tool to inspect and manage
 | **Updates** | All Updates / Pending Updates, with per-update Install action |
 | **Tools** | Clear CCM cache, Client repair/reinstall, Pending reboot |
 | **Console** | **Open Console** — interactive remote PowerShell session (`Enter-PSSession`) in a new window, pass-through Kerberos/NTLM. **Run PS** — built-in script library (70 scripts from the original Client Center tool, grouped by folder) plus your own custom `.ps1` scripts from a configurable folder, run against the connected computer with live, copyable output |
-| **Logs** | CCM log viewer with CMTrace format parsing, filter, color-coded severity, separate tabs for CCM Client / CCMSetup / PSADT logs |
+| **Logs** | CCM log viewer with CMTrace format parsing, filter, color-coded severity, separate tabs for CCM Client / CCMSetup / PSADT logs, selectable/copyable entries (per-field selection, "Copy All", right-click "Copy line") |
 | **Settings** | Light/Dark/System theme, custom scripts folder location |
 
 ## Requirements
