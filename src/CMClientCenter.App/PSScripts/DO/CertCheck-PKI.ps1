@@ -1,51 +1,64 @@
-Function Get-CCMLogDirectory {
-        $obj = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\CCM\Logging\@Global').LogDirectory
-        if ($obj -eq $null) { $obj = "C:\WINDOWS\CCM\Logs" }
-        Write-Output $obj
-    }
+#Requires -Version 5.1
+<#
+.SYNOPSIS
+    Checks the CCM client log for the two most common client-certificate
+    registration failures and attempts to remediate the recoverable one.
 
+.DESCRIPTION
+    Looks at ClientIDManagerStartup.log for "Failed to find the certificate
+    in the store" (recoverable — CCM re-creates the certificate once the
+    stale registry/cert reference is removed and the service restarts) and
+    "Server rejected registration" (not auto-remediable; needs investigation
+    of the PKI/HTTPS configuration).
+#>
+
+function Get-CCMLogDirectory {
+    $logDir = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\CCM\Logging\@Global' -ErrorAction SilentlyContinue).LogDirectory
+    if (-not $logDir) { $logDir = 'C:\Windows\CCM\Logs' }
+    return $logDir
+}
 
 function Test-CCMCertificateError {
-        #Param([Parameter(Mandatory=$true)]$Log)
-        # More checks to come
-        $logdir = Get-CCMLogDirectory
-        $logFile1 = "$logdir\ClientIDManagerStartup.log"
-        $error1 = 'Failed to find the certificate in the store'
-        $error2 = '[RegTask] - Server rejected registration 3'
-        $content = Get-Content -Path $logFile1
+    $logDir = Get-CCMLogDirectory
+    $logFile = Join-Path -Path $logDir -ChildPath 'ClientIDManagerStartup.log'
 
-        $ok = $true
-
-        if ($content -match $error1) {
-            $ok = $false
-            $text = 'ConfigMgr Client Certificate: Error failed to find the certificate in store. Attempting fix.'
-            Write-Warning $text
-            Stop-Service -Name ccmexec -Force
-            # Name is persistant across systems.
-            $cert = "$env:ProgramData\Microsoft\Crypto\RSA\MachineKeys\19c5cf9c7b5dc9de3e548adb70398402_50e417e0-e461-474b-96e2-077b80325612"
-            # CCM creates new certificate when missing.
-            Remove-Item -Path $cert -Force -ErrorAction SilentlyContinue | Out-Null
-            # Remove the error from the logfile to avoid double remediations based on false positives
-            $newContent = $content | Select-String -pattern $Error1 -notmatch
-            Out-File -FilePath $logfile -InputObject $newContent -Encoding utf8 -Force
-            Start-Service -Name ccmexec
-            
-            # Update log object
-            #$log.ClientCertificate = $error1
-        }
-
-        #$content = Get-Content -Path $logFile2
-        if ($content -match $error2) {
-            $ok = $false
-            $text = 'ConfigMgr Client Certificate: Error! Server rejected client registration. Client Certificate not valid. No auto-remediation.'
-            Write-Error $text
-            #$log.ClientCertificate = $error2
-        }
-
-        if ($ok = $true) {
-            $text = 'ConfigMgr Client Certificate: OK'
-            Write-Output $text
-            #$log.ClientCertificate = 'OK'
-        }
+    if (-not (Test-Path -Path $logFile)) {
+        Write-Warning "ConfigMgr Client Certificate: log file not found at $logFile"
+        return
     }
-    Test-CCMCertificateError
+
+    $content = Get-Content -Path $logFile
+    $missingCertPattern = 'Failed to find the certificate in the store'
+    $rejectedPattern = '\[RegTask\] - Server rejected registration'
+    $ok = $true
+
+    if ($content -match $missingCertPattern) {
+        $ok = $false
+        Write-Warning 'ConfigMgr Client Certificate: certificate missing from store. Attempting fix.'
+
+        Stop-Service -Name CcmExec -Force
+
+        # This key name is consistent across systems for the CCM client cert.
+        $certKeyPath = "$env:ProgramData\Microsoft\Crypto\RSA\MachineKeys\19c5cf9c7b5dc9de3e548adb70398402_50e417e0-e461-474b-96e2-077b80325612"
+        Remove-Item -Path $certKeyPath -Force -ErrorAction SilentlyContinue
+
+        # Drop the matched line from the log so a stale match doesn't trigger
+        # a repeat "fix" next run, now that the underlying cause is cleared.
+        $newContent = $content | Select-String -Pattern $missingCertPattern -NotMatch
+        Set-Content -Path $logFile -Value $newContent -Encoding UTF8 -Force
+
+        Start-Service -Name CcmExec
+        Write-Output 'ConfigMgr Client Certificate: missing-certificate condition cleared, CcmExec restarted.'
+    }
+
+    if ($content -match $rejectedPattern) {
+        $ok = $false
+        Write-Error 'ConfigMgr Client Certificate: server rejected client registration. Certificate not valid — no auto-remediation, check PKI/HTTPS configuration.'
+    }
+
+    if ($ok) {
+        Write-Output 'ConfigMgr Client Certificate: OK'
+    }
+}
+
+Test-CCMCertificateError

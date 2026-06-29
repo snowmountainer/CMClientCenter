@@ -85,6 +85,17 @@ dotnet run --project src/CMClientCenter.App --arch x64
 - Verschachtelte Arrays in `PSCustomObject`s sind über WinRM unzuverlässig — immer separate Skript-Aufrufe mit flachen Objekten zurückgeben (Ursache für leere Applications-Liste über WinRM, behoben mit eigenem `Get-CCMApplications.ps1`)
 - `PSObjectMapper` muss `Unwrap()` vor Type-Checks aufrufen, sonst schlägt `GetDateTime()` auf yyyyMMdd-Strings fehl
 
+## PSScripts-Bibliothek (Console-Page "Run PS")
+
+- Built-in-Scripts werden über `ps.AddScript(scriptContent)` + `ps.InvokeAsync()` ausgeführt (`RunspaceManager.InvokeRawAsync`, genutzt von `ConsoleExecutor.RunCustomScriptAsync`) — das ist Datei-Semantik, nicht Pipeline-Semantik. `return` auf Top-Level (außerhalb einer Funktion) ist hier gültig und beendet das Script wie bei einer dot-gesourcten `.ps1`-Datei.
+- `schtasks.exe` signalisiert Fehler über den Exit-Code, **wirft aber nie eine PowerShell-Exception** — `try { schtasks /Run ... } catch { ... }` fängt den Fehlerfall nie ab. Stattdessen `$LASTEXITCODE` nach dem Aufruf prüfen.
+- Destruktive "Fix"-Scripts gezielt statt global wirken lassen: SCCM-Policy-Cache-Probleme über `ROOT\ccm\Policy\Machine\RequestedConfig`/`ActualConfig` (per WMI) leeren statt den gesamten lokalen GPO-Ordner (`C:\Windows\System32\GroupPolicy\*`) zu löschen — letzteres nimmt alle GPO-Settings mit, nicht nur SCCM-relevante.
+- Firewall-Reparatur-Scripts: gezielt einzelne Firewall-Regelgruppen aktivieren (`Get-NetFirewallRule -Group ... | Enable-NetFirewallRule`), niemals `Set-NetFirewallProfile -Enabled False` als "Fix" einsetzen — das deaktiviert die Firewall komplett und dauerhaft.
+- `wuauclt.exe` ist seit Windows 10 1809 ein wirkungsloser Stub — `/ResetAuthorization`, `/DetectNow`, `/reportnow` haben keinen Effekt mehr; nicht mehr verwenden, WMI-Schedule-Trigger (`SMS_Client.TriggerSchedule`) reichen aus.
+- `appidsvc` (Application Identity) heißt unter diesem Namen seit Win10/11 oft nicht mehr direkt ansprechbar — vor `Stop-Service`/`Start-Service`-Aufrufen auf Dienstnamen immer `-ErrorAction SilentlyContinue` setzen, da sich Dienstnamen über Windows-Versionen ändern können.
+- `quser`/`query user`-Textausgabe nie per fixer `.Substring(n, m)`-Zeichenposition parsen (bricht bei langen Benutzernamen oder Locale-Änderungen) — Spaltenstart stattdessen über `IndexOf()` auf der Header-Zeile ermitteln.
+- Site-Server/DP-Dienste (WSUS, IIS `W3SVC`, `MSSQL$MICROSOFT##WID`) gehören nicht in die Client-Script-Bibliothek (`PSScripts/`) — eigener Ordner `PSScripts-SiteServer/`, der **nicht** im `.csproj` per `<Content Include>` referenziert wird, damit er nicht mit ausgeliefert wird und nicht in der "Run PS"-Liste auftaucht.
+
 ## WinUI 3 Constraints
 
 - `Application.RequestedTheme` muss vor dem ersten `Window.Activate()` gesetzt werden — zur Laufzeit gesetzt wirft es eine `COMException`

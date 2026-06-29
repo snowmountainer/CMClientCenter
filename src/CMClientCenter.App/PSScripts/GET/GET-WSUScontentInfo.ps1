@@ -1,35 +1,39 @@
-Function Get-CMClientWSUSContentLocation
-{
-    $DObject = New-Object PSObject
-    $DObject | Add-Member -MemberType NoteProperty -Name "ComputerName" -Value $env:ComputerName  
-        Try{
-            $WUA = Get-WmiObject -Namespace "Root\CCM\SoftwareUpdates\WUAHandler" -Class CCM_UpdateSource -ErrorAction STOP
-            $DObject | Add-Member -MemberType NoteProperty -Name "Status" -Value "OK"
-            $DObject | Add-Member -MemberType NoteProperty -Name "ContentLocation" -Value $WUA.ContentLocation
-            $DObject | Add-Member -MemberType NoteProperty -Name "ContentVersion" -Value $WUA.ContentVersion
-        }
-        Catch{
-            Try{
-                $WUA = Get-ItemProperty "HKLM:SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" -ErrorAction STOP
-                if($WUA.WUServer.Length -eq 0){
-                    $WuServer = "No Server"
-                }
-                Else{
-                    $WuServer = $WUA.WUServer
-                }
-                $DObject | Add-Member -MemberType NoteProperty -Name "Status" -Value "OK"
-                $DObject | Add-Member -MemberType NoteProperty -Name "ContentLocation" -Value $WuServer
-                $DObject | Add-Member -MemberType NoteProperty -Name "ContentVersion" -Value "N/A"
-            }
-            Catch{
-                    $DObject | Add-Member -MemberType NoteProperty -Name "Status" -Value $_.Exception.Message
-                    $DObject | Add-Member -MemberType NoteProperty -Name "ContentLocation" -Value "N/A"
-                    $DObject | Add-Member -MemberType NoteProperty -Name "ContentVersion" -Value "N/A"
-            }
-            $DObject | Add-Member -MemberType NoteProperty -Name "Status" -Value $_.Exception.Message
-            $DObject | Add-Member -MemberType NoteProperty -Name "ContentLocation" -Value "N/A"
-            $DObject | Add-Member -MemberType NoteProperty -Name "ContentVersion" -Value "N/A"
-        }
-    $DObject
+#Requires -Version 5.1
+<#
+.SYNOPSIS
+    Reports where this client gets its software update content from
+    (its WUAHandler content source, or the WSUS server set via policy).
+
+.DESCRIPTION
+    The original version's outer catch block set Status/ContentLocation/
+    ContentVersion a second time after the inner try/catch already had,
+    which could silently overwrite a successful inner result with the
+    outer exception message. This sets each property exactly once.
+#>
+
+$result = [PSCustomObject]@{
+    ComputerName    = $env:ComputerName
+    Status          = $null
+    ContentLocation = $null
+    ContentVersion  = $null
 }
-Get-CMClientWSUSContentLocation
+
+try {
+    $wua = Get-WmiObject -Namespace 'ROOT\CCM\SoftwareUpdates\WUAHandler' -Class CCM_UpdateSource -ErrorAction Stop
+    $result.Status          = 'OK'
+    $result.ContentLocation = $wua.ContentLocation
+    $result.ContentVersion  = $wua.ContentVersion
+} catch {
+    try {
+        $wuPolicy = Get-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -ErrorAction Stop
+        $result.Status          = 'OK'
+        $result.ContentLocation = if ($wuPolicy.WUServer) { $wuPolicy.WUServer } else { 'No Server (policy key present but WUServer empty)' }
+        $result.ContentVersion  = 'N/A'
+    } catch {
+        $result.Status          = $_.Exception.Message
+        $result.ContentLocation = 'N/A'
+        $result.ContentVersion  = 'N/A'
+    }
+}
+
+$result

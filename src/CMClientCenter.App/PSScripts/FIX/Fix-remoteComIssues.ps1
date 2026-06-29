@@ -1,26 +1,57 @@
-#To fix remote communication issues, fixed remote access denied issues
-Set-Service MpsSvc -StartupType Automatic
-(Get-Service 'MpsSvc').Start()
-netsh firewall set service REMOTEADMIN enable
-Set-Service WinRM -StartMode Automatic
-Set-Item WSMan:localhost\client\trustedhosts -value "*" -force
+#Requires -Version 5.1
+<#
+.SYNOPSIS
+    Repairs common causes of "remote access denied" / WinRM and DCOM
+    remoting failures on a managed client.
 
-reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\system /v LocalAccountTokenFilterPolicy /t REG_DWORD /d "1" /f
-reg add HKLM\SOFTWARE\Microsoft\Ole /v LegacyAuthenticationLevel /t REG_DWORD /d "2" /f
-reg add HKLM\SOFTWARE\Microsoft\Ole /v EnableRemoteConnect /t REG_DWORD /d "Y" /f
-reg add HKLM\SOFTWARE\Microsoft\Ole /v LegacyImpersonationLevel /t REG_DWORD /d "2" /f
+.DESCRIPTION
+    Ensures the services and firewall rules that WinRM, DCOM, and WMI
+    remoting depend on are enabled, without disabling the firewall itself.
+    Re-enabling PS-Remoting and the relevant rule groups is normally enough;
+    turning the firewall off entirely (as the original script did) is not
+    a "fix", it's a workaround that removes a layer of protection the
+    client should keep.
+#>
 
-REG add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" /v RegisterReverseLookup /t REG_DWORD /d 2 /f
-REG add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" /v RegistrationEnabled /t REG_DWORD /d 1 /f
-REG add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" /v RegistrationOverwritesInConflict /t REG_DWORD /d 1 /f
-REG add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" /v RegistrationRefreshInterval /t REG_DWORD /d 1800 /f
-REG add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" /v EnableMulticast /t REG_DWORD /d 0 /f
-netsh firewall set service type=remoteadmin mode=enable
-netsh advfirewall firewall set rule group="Windows Remote Management" new enable=yes
-netsh advfirewall firewall set rule group="remote desktop" new enable=Yes
-netsh advfirewall firewall set rule group="windows management instrumentation (WMI)" new enable=Yes 
-netsh advfirewall firewall set rule group="remote administration" new enable=yes
-Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
-ipconfig /flushdns
-ipconfig /registerdns
-Enable-PSRemoting -force
+Write-Output 'Repairing remote communication prerequisites...'
+
+# Windows Firewall service must be running for WinRM/DCOM to negotiate at all
+Set-Service -Name MpsSvc -StartupType Automatic
+Start-Service -Name MpsSvc -ErrorAction SilentlyContinue
+
+# WinRM service set to auto-start and (re)enabled — this also creates the
+# default listener and the matching firewall rule group.
+Set-Service -Name WinRM -StartupType Automatic
+Enable-PSRemoting -Force -SkipNetworkProfileCheck
+
+# DCOM / legacy remote-WMI authentication settings — required for tools
+# that still talk to the client over DCOM rather than WinRM.
+New-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'LocalAccountTokenFilterPolicy' -Value 1 -PropertyType DWord -Force | Out-Null
+New-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Ole' -Name 'LegacyAuthenticationLevel' -Value 2 -PropertyType DWord -Force | Out-Null
+New-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Ole' -Name 'LegacyImpersonationLevel' -Value 2 -PropertyType DWord -Force | Out-Null
+New-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Ole' -Name 'EnableRemoteConnect' -Value 'Y' -PropertyType String -Force | Out-Null
+
+# DNS registration — a client that can't register/update its A record is a
+# common, easy-to-miss reason remote tools can't resolve or reach it.
+New-Item -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient' -Force | Out-Null
+New-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient' -Name 'RegisterReverseLookup' -Value 2 -PropertyType DWord -Force | Out-Null
+New-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient' -Name 'RegistrationEnabled' -Value 1 -PropertyType DWord -Force | Out-Null
+New-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient' -Name 'RegistrationOverwritesInConflict' -Value 1 -PropertyType DWord -Force | Out-Null
+New-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient' -Name 'RegistrationRefreshInterval' -Value 1800 -PropertyType DWord -Force | Out-Null
+
+# Firewall rule groups that gate remote management — enabled individually,
+# the firewall itself stays on.
+$ruleGroups = 'Windows Remote Management', 'Remote Desktop', 'Windows Management Instrumentation (WMI)', 'Remote Administration'
+foreach ($group in $ruleGroups) {
+    try {
+        Get-NetFirewallRule -Group $group -ErrorAction Stop | Enable-NetFirewallRule
+        Write-Output "  Firewall rule group enabled: $group"
+    } catch {
+        Write-Warning "  Firewall rule group not found (nothing to enable): $group"
+    }
+}
+
+ipconfig /flushdns | Out-Null
+ipconfig /registerdns | Out-Null
+
+Write-Output 'Done. Firewall remains enabled on all profiles; only the rule groups above and PS-Remoting were (re)opened.'

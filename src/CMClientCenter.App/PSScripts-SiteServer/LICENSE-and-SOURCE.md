@@ -1,35 +1,31 @@
 # Source & License
 
-The scripts in this folder (and its subfolders `DO`, `FIX`, `GET`) were
-originally based on the **"Client Center for Configuration Manager"**
-project by Roger Zander:
+The scripts in this folder were originally based on the **"Client Center
+for Configuration Manager"** project by Roger Zander:
 
   https://github.com/rzander/sccmclictr
-  (Plugins/Plugin_PSScripts/PSScripts)
+  (Plugins/Plugin_PSScripts/PSScripts/SCCM-DP)
 
 That project is distributed under the **Microsoft Public License (Ms-PL)**,
-which permits reproduction, modification, and redistribution. As of this
-modernization pass (2026, targeting Windows 11 + MECM 2509, PowerShell 5.1),
-every script here has been rewritten — corrected logic bugs, removed
-Windows-XP/7/8.1-era workarounds, removed risky destructive behavior, and
-applied a consistent style — rather than carrying forward the original
-source verbatim. The full Ms-PL license text is reproduced below, as the
-license requires for any reuse of the original project regardless of how
-much the code has since changed.
+which permits reproduction, modification, and redistribution. The full
+license text is reproduced below, as the license requires for any reuse of
+the original project regardless of how much the code has since changed.
 
-These scripts ship as **built-in** examples for CMClientCenter's "Console →
-Run PS" feature, read-only and separate from the user's own custom scripts
-folder (`%LOCALAPPDATA%\CMClientCenter\Scripts`). Feel free to add, remove,
-or edit files here — they're plain text and not compiled — but note that an
-app update may overwrite this folder's contents.
+## Why this folder is separate from `PSScripts\`
 
-Three scripts that originally lived under a `SCCM-DP` subfolder here
-(LEDBAT check, DP content validation, WSUS service check) were moved out to
-`..\PSScripts-SiteServer\` — they target Distribution Point / Site Server
-services (WSUS, IIS, the WID database) rather than the managed client, so
-they don't belong in a client-facing "Run PS" list and aren't shipped
-(no `<Content Include>` entry in the `.csproj` references that folder). See
-that folder's own `LICENSE-and-SOURCE.md` for the same Ms-PL attribution.
+These three scripts target **Distribution Point / Site Server** services —
+WSUS (`WsusService`), IIS (`W3SVC`), the WSUS internal database
+(`MSSQL$MICROSOFT##WID`), and DP content validation — rather than the
+managed *client* that CMClientCenter connects to and runs PowerShell
+against via WinRM. Running them against an ordinary client fails outright,
+since none of those services exist there.
+
+This folder is **not** referenced by `CMClientCenter.App.csproj`'s
+`<Content Include="PSScripts\**\*.ps1">` item, so its contents are not
+copied to the build output and do not appear in the Console page's
+"Run PS → Built-in Scripts" list. The scripts are kept here for reference
+and for anyone who wants to wire up a separate site-server/DP-targeted
+tool in the future, not for day-to-day client troubleshooting.
 
 ---
 
