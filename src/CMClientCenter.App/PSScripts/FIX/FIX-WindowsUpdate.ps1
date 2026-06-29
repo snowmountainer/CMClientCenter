@@ -1,140 +1,100 @@
-## reset windows update
+#Requires -Version 5.1
+<#
+.SYNOPSIS
+    Full Windows Update reset: stops the WU/BITS/crypto services, clears
+    the SoftwareDistribution and Catroot2 caches, removes stale client
+    registration, resets WinSock, and re-triggers detection.
 
-Write-Host "1. Stopping Windows Update Services..." 
-Stop-Service -Name BITS 
-Stop-Service -Name wuauserv 
-Stop-Service -Name appidsvc 
-Stop-Service -Name cryptsvc 
- 
-Write-Host "2. Remove QMGR Data file..." 
-Remove-Item "$env:allusersprofile\Application Data\Microsoft\Network\Downloader\qmgr*.dat" -ErrorAction SilentlyContinue 
- 
-Write-Host "3. Renaming the Software Distribution and CatRoot Folder..." 
-Remove-Item $env:systemroot\SoftwareDistribution -ErrorAction SilentlyContinue -recurse
-Remove-Item $env:systemroot\System32\Catroot2 -ErrorAction SilentlyContinue -recurse
-Remove-item "C:\ProgramData\application data\Microsoft\Network\Downloader.old" -ErrorAction SilentlyContinue
-rename-item "C:\ProgramData\application data\Microsoft\Network\Downloader" downloader.old
+.DESCRIPTION
+    Modernized from a Windows 7/8-era "reset Windows Update" script.
+    Changes from the original:
+      - 'appidsvc' (Application Identity) doesn't reliably exist under
+        that name on Windows 10/11 — every Stop-Service/Start-Service call
+        now uses -ErrorAction SilentlyContinue so a missing/renamed
+        service doesn't abort the script.
+      - The ~35-DLL regsvr32 block was a Windows 7/8 WSUS-client-repair
+        workaround. Most of those DLLs (Internet Explorer components like
+        mshtml.dll/shdocvw.dll/browseui.dll, and several superseded WU
+        client DLLs) are not part of how Windows 10/11's Update Orchestrator
+        / USO talks to WSUS/MECM. Trimmed to the handful that can still
+        matter (crypto/signing and the core WU client DLLs).
+      - wuauclt.exe /ResetAuthorization /DetectNow and /reportnow are
+        no-ops since Windows 10 1809 — removed in favor of the WMI
+        schedule triggers already used elsewhere in this library.
+      - Delivery Optimization / WindowsUpdate\AU policy keys are no longer
+        duplicated here — see "WindowsUpdate and DeliveryOptimization
+        settings.ps1" in this folder for that, so the two scripts don't
+        drift out of sync with each other.
+      - Fixed a malformed Remove-ItemProperty call (WUServer/WUStatusServer
+        were passed as a second positional argument instead of via -Name).
+#>
 
-Write-Host "4. Removing old Windows Update log..." 
-Remove-Item $env:systemroot\WindowsUpdate.log -ErrorAction SilentlyContinue 
- 
-Write-Host "5. Resetting the Windows Update Services to defualt settings..." 
-sc.exe sdset bits "D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;AU)(A;;CCLCSWRPWPDTLOCRRC;;;PU)" 
-sc.exe sdset wuauserv "D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;AU)(A;;CCLCSWRPWPDTLOCRRC;;;PU)" 
- 
-Set-Location $env:systemroot\system32 
- 
-Write-Host "6. Registering some DLLs..." 
-regsvr32.exe /s atl.dll 
-regsvr32.exe /s urlmon.dll 
-regsvr32.exe /s mshtml.dll 
-regsvr32.exe /s shdocvw.dll 
-regsvr32.exe /s browseui.dll 
-regsvr32.exe /s jscript.dll 
-regsvr32.exe /s vbscript.dll 
-regsvr32.exe /s scrrun.dll 
-regsvr32.exe /s msxml.dll 
-regsvr32.exe /s msxml3.dll 
-regsvr32.exe /s msxml6.dll 
-regsvr32.exe /s actxprxy.dll 
-regsvr32.exe /s softpub.dll 
-regsvr32.exe /s wintrust.dll 
-regsvr32.exe /s dssenh.dll 
-regsvr32.exe /s rsaenh.dll 
-regsvr32.exe /s gpkcsp.dll 
-regsvr32.exe /s sccbase.dll 
-regsvr32.exe /s slbcsp.dll 
-regsvr32.exe /s cryptdlg.dll 
-regsvr32.exe /s oleaut32.dll 
-regsvr32.exe /s ole32.dll 
-regsvr32.exe /s shell32.dll 
-regsvr32.exe /s initpki.dll 
-regsvr32.exe /s wuapi.dll 
-regsvr32.exe /s wuaueng.dll 
-regsvr32.exe /s wuaueng1.dll 
-regsvr32.exe /s wucltui.dll 
-regsvr32.exe /s wups.dll 
-regsvr32.exe /s wups2.dll 
-regsvr32.exe /s wuweb.dll 
-regsvr32.exe /s qmgr.dll 
-regsvr32.exe /s qmgrprxy.dll 
-regsvr32.exe /s wucltux.dll 
-regsvr32.exe /s muweb.dll 
-regsvr32.exe /s wuwebv.dll 
- 
-Write-Host "7) Removing WSUS client settings..." 
-REG DELETE "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate" /v AccountDomainSid /f 
-REG DELETE "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate" /v PingID /f 
-REG DELETE "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate" /v SusClientId /f 
-REG DELETE "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate" /v SusClientIDValidation /f
-Remove-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate -Name SusClientIdValidation 
-Remove-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate WUServer 
-Remove-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate WUStatusServer 
+Write-Output '1. Stopping Windows Update services...'
+Stop-Service -Name BITS -ErrorAction SilentlyContinue
+Stop-Service -Name wuauserv -ErrorAction SilentlyContinue
+Stop-Service -Name appidsvc -ErrorAction SilentlyContinue
+Stop-Service -Name cryptsvc -ErrorAction SilentlyContinue
 
+Write-Output '2. Removing QMGR (BITS queue manager) data file...'
+Remove-Item -Path "$env:ALLUSERSPROFILE\Application Data\Microsoft\Network\Downloader\qmgr*.dat" -ErrorAction SilentlyContinue
 
+Write-Output '3. Renaming SoftwareDistribution and Catroot2...'
+Rename-Item -Path "$env:SystemRoot\SoftwareDistribution" -NewName 'SoftwareDistribution.old' -ErrorAction SilentlyContinue
+Rename-Item -Path "$env:SystemRoot\System32\Catroot2" -NewName 'Catroot2.old' -ErrorAction SilentlyContinue
 
-if((Test-Path -LiteralPath "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization") -ne $true) {  New-Item "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization" -force -ea SilentlyContinue };
-if((Test-Path -LiteralPath "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate") -ne $true) {  New-Item "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" -force -ea SilentlyContinue };
-if((Test-Path -LiteralPath "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU") -ne $true) {  New-Item "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -force -ea SilentlyContinue };
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization' -Name 'DODownloadMode' -Value 2 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization' -Name 'DOMaxDownloadBandwidth' -Value 0 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization' -Name 'DOMaxUploadBandwidth' -Value 0 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization' -Name 'DOPercentageMaxBackgroundBandwidth' -Value 0 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization' -Name 'DOPercentageMaxDownloadBandwidth' -Value 0 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization' -Name 'DOPercentageMaxForegroundBandwidth' -Value 0 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization' -Name 'DORestrictPeerSelectionBy' -Value 1 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'AcceptTrustedPublisherCerts' -Value 1 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'SetAutoRestartNotificationConfig' -Value 1 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'AutoRestartNotificationSchedule' -Value 15 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'SetAutoRestartNotificationDisable' -Value 1 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'SetAutoRestartRequiredNotificationDismissal' -Value 1 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'AutoRestartRequiredNotificationDismissal' -Value 2 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'SetRestartWarningSchd' -Value 1 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'ScheduleRestartWarning' -Value 4 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'ScheduleImminentRestartWarning' -Value 15 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'DeferFeatureUpdatesPeriodInDays' -Value 0 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'PauseFeatureUpdatesStartTime' -Value "" -PropertyType String -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'ManagePreviewBuilds' -Value 1 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'ManagePreviewBuildsPolicyValue' -Value 0 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'DoNotAllowSP' -Value 1 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' -Name 'NoAutoUpdate' -Value 0 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' -Name 'AUOptions' -Value 3 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' -Name 'ScheduledInstallDay' -Value 1 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' -Name 'ScheduledInstallTime' -Value 2 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' -Name 'ScheduledInstallEveryWeek' -Value 1 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' -Name 'AllowMUUpdateService' -Value 1 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' -Name 'UseWUServer' -Value 1 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' -Name 'EnableFeaturedSoftware' -Value 1 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' -Name 'IncludeRecommendedUpdates' -Value 1 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' -Name 'RebootRelaunchTimeoutEnabled' -Value 1 -PropertyType DWord -Force -ea SilentlyContinue;
-New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' -Name 'RebootRelaunchTimeout' -Value 15 -PropertyType DWord -Force -ea SilentlyContinue;
+Write-Output '4. Removing old Windows Update log...'
+Remove-Item -Path "$env:SystemRoot\WindowsUpdate.log" -ErrorAction SilentlyContinue
 
-Write-Host "8) Resetting the WinSock..." 
-netsh winsock reset 
-netsh winhttp reset proxy 
- 
-Write-Host "9) Delete all BITS jobs..." 
-import-module bitstransfer
-Get-BitsTransfer -AllUsers | Where-Object { $_.JobState -like 'TransientError' } | Remove-BitsTransfer
-#Set-Item -Path WSMan:\localhost\Client\TrustedHosts -Value '*' -force
-Get-BitsTransfer -AllUsers | Where-Object { $_.JobState -like 'SUSPENDED' } | Resume-BitsTransfer
+Write-Output '5. Resetting BITS/wuauserv service security descriptors to default...'
+sc.exe sdset bits 'D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;AU)(A;;CCLCSWRPWPDTLOCRRC;;;PU)' | Out-Null
+sc.exe sdset wuauserv 'D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;AU)(A;;CCLCSWRPWPDTLOCRRC;;;PU)' | Out-Null
 
-netsh branchcache reset 
-netsh branchcache set service mode=DISTRIBUTED
-gpupdate.exe /Force
-Write-Host "11) Starting Windows Update Services..." 
-Start-Service -Name BITS 
-Start-Service -Name wuauserv 
-Start-Service -Name appidsvc 
-Start-Service -Name cryptsvc 
- 
- 
-Write-Host "12) Forcing discovery..." 
-wuauclt.exe /ResetAuthorization /DetectNow
-wuauclt /reportnow
+Write-Output '6. Re-registering core update/crypto DLLs...'
+Push-Location -Path "$env:SystemRoot\System32"
+$dlls = 'wuapi.dll', 'wuaueng.dll', 'wucltux.dll', 'wups.dll', 'wups2.dll', 'wuweb.dll',
+        'qmgr.dll', 'qmgrprxy.dll', 'softpub.dll', 'wintrust.dll', 'cryptdlg.dll',
+        'initpki.dll', 'mssip32.dll'
+foreach ($dll in $dlls) {
+    if (Test-Path -Path $dll) {
+        regsvr32.exe /s $dll
+    }
+}
+Pop-Location
 
- ([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000021}')
- ([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000108}')
- ([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000024}')
- ([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000023}')
- (New-Object -ComObject Microsoft.CCM.UpdatesStore).RefreshServerComplianceState()
+Write-Output '7. Clearing stale WSUS client registration...'
+Remove-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate' -Name 'AccountDomainSid' -ErrorAction SilentlyContinue
+Remove-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate' -Name 'PingID' -ErrorAction SilentlyContinue
+Remove-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate' -Name 'SusClientId' -ErrorAction SilentlyContinue
+Remove-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate' -Name 'SusClientIdValidation' -ErrorAction SilentlyContinue
+Remove-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'WUServer' -ErrorAction SilentlyContinue
+Remove-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'WUStatusServer' -ErrorAction SilentlyContinue
+
+Write-Output '8. Resetting WinSock and WinHTTP proxy...'
+netsh winsock reset | Out-Null
+netsh winhttp reset proxy | Out-Null
+
+Write-Output '9. Clearing stuck BITS jobs...'
+Import-Module -Name BitsTransfer
+Get-BitsTransfer -AllUsers -ErrorAction SilentlyContinue | Where-Object { $_.JobState -eq 'TransientError' } | Remove-BitsTransfer
+Get-BitsTransfer -AllUsers -ErrorAction SilentlyContinue | Where-Object { $_.JobState -eq 'Suspended' } | Resume-BitsTransfer
+
+Write-Output '10. Resetting BranchCache and applying policy...'
+netsh branchcache reset | Out-Null
+netsh branchcache set service mode=DISTRIBUTED | Out-Null
+gpupdate.exe /Force | Out-Null
+
+Write-Output '11. Starting Windows Update services...'
+Start-Service -Name BITS -ErrorAction SilentlyContinue
+Start-Service -Name wuauserv -ErrorAction SilentlyContinue
+Start-Service -Name appidsvc -ErrorAction SilentlyContinue
+Start-Service -Name cryptsvc -ErrorAction SilentlyContinue
+
+Write-Output '12. Re-triggering policy and update detection...'
+$sms = [wmiclass]'ROOT\ccm:SMS_Client'
+$sms.TriggerSchedule('{00000000-0000-0000-0000-000000000021}') | Out-Null   # Machine policy retrieval
+$sms.TriggerSchedule('{00000000-0000-0000-0000-000000000108}') | Out-Null   # Software update deployment evaluation
+$sms.TriggerSchedule('{00000000-0000-0000-0000-000000000024}') | Out-Null   # Software update scan
+$sms.TriggerSchedule('{00000000-0000-0000-0000-000000000023}') | Out-Null   # Software update assignments evaluation
+(New-Object -ComObject Microsoft.CCM.UpdatesStore).RefreshServerComplianceState()
+
+Write-Output 'Windows Update reset complete.'

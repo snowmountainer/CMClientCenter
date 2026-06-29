@@ -1,19 +1,38 @@
-﻿$ServiceName = 'CCMEXEC'
-$arrService = Get-Service -Name $ServiceName
-Stop-Service $ServiceName;
-Start-Sleep -seconds 5;
-while ($arrService.Status -ne 'Stopped')
-{
-    Stop-Service $ServiceName
-    write-host $arrService.status
-    write-host 'Service Stopping'
-    Start-Sleep -seconds 5
-    $arrService.Refresh()
+#Requires -Version 5.1
+<#
+.SYNOPSIS
+    Forces the ConfigMgr client to generate a new Hardware ID/GUID by
+    stopping CcmExec, clearing SMSCFG.ini and the client certificate, then
+    restarting the service.
+
+.DESCRIPTION
+    The original version's while-loop waiting for the service to stop had
+    no timeout — if CcmExec never reached "Stopped" (e.g. a hung dependent
+    process), the script would block forever. This caps the wait instead
+    of looping indefinitely.
+#>
+
+$serviceName = 'CcmExec'
+$service = Get-Service -Name $serviceName
+Stop-Service -Name $serviceName
+
+$maxRetries = 12
+$retryDelaySeconds = 5
+for ($attempt = 1; $attempt -le $maxRetries; $attempt++) {
+    $service.Refresh()
+    if ($service.Status -eq 'Stopped') { break }
+    Write-Output "Waiting for $serviceName to stop (attempt $attempt of $maxRetries, current status: $($service.Status))..."
+    Start-Sleep -Seconds $retryDelaySeconds
 }
-if ($arrService.Status -eq 'Stopped')
-    {
-        Write-Host 'Service is now Stopped'
-		remove-item C:\Windows\SMSCFG.ini;
-		Remove-Item -Path HKLM:\Software\Microsoft\SystemCertificates\SMS\Certificates\* -Force; 
-		Start-Service $ServiceName
-    }
+
+if ($service.Status -ne 'Stopped') {
+    Write-Warning "$serviceName did not stop after $($maxRetries * $retryDelaySeconds) seconds — aborting without clearing the GUID."
+    return
+}
+
+Write-Output "$serviceName is stopped. Clearing SMSCFG.ini and client certificate..."
+Remove-Item -Path 'C:\Windows\SMSCFG.ini' -Force -ErrorAction SilentlyContinue
+Remove-Item -Path 'HKLM:\Software\Microsoft\SystemCertificates\SMS\Certificates\*' -Force -ErrorAction SilentlyContinue
+
+Start-Service -Name $serviceName
+Write-Output 'CcmExec restarted — a new Hardware ID/GUID will be generated on next policy evaluation.'

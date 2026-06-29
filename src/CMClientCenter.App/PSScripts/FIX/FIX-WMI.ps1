@@ -1,69 +1,53 @@
-# Stop WMI
-# Only if SCCM/SMS Client is installed. Stop ccmexec.
-Stop-Service -Force ccmexec -ErrorAction SilentlyContinue
-Stop-Service -Force winmgmt
+#Requires -Version 5.1
+<#
+.SYNOPSIS
+    Repairs a corrupted WMI repository: re-registers the core WMI binaries,
+    resets/salvages the repository, and recompiles the SCCM client's own
+    MOF files.
 
-[String[]]$aWMIBinaries=@("unsecapp.exe","wmiadap.exe","wmiapsrv.exe","wmiprvse.exe","scrcons.exe")
-foreach ($sWMIPath in @(($ENV:SystemRoot+"\System32\wbem"),($ENV:SystemRoot+"\SysWOW64\wbem"))){
-	if(Test-Path -Path $sWMIPath){
-		push-Location $sWMIPath
-		foreach($sBin in $aWMIBinaries){
-			if(Test-Path -Path $sBin){
-				$oCurrentBin=Get-Item -Path  $sBin
-				Write-Host " Register $sBin"
-				& $oCurrentBin.FullName /RegServer
-			}
-			else{
-				# Warning only for System32
-				if($sWMIPath -eq $ENV:SystemRoot+"\System32\wbem"){
-					Write-Warning "File $sBin not found!"
-				}
-			}
-		}
-		Pop-Location
-	}
+.DESCRIPTION
+    The original version branched on [System.Environment]::OSVersion's
+    major/minor version to support Windows 2000/XP/2003 (Major -eq 5),
+    which used a different, older repair mechanism (mofcomp against every
+    .mof/.mfl file plus rundll32 wbemupgd). That branch can never be
+    reached on Windows 10/11 (Major -eq 10) and has been removed — only the
+    Vista-and-later winmgmt.exe /resetrepository + /salvagerepository path
+    remains, which is also Microsoft's current documented approach.
+#>
+
+Write-Output 'Stopping WMI-dependent services...'
+Stop-Service -Name CcmExec -Force -ErrorAction SilentlyContinue
+Stop-Service -Name Winmgmt -Force
+
+Write-Output 'Re-registering core WMI binaries...'
+$wmiBinaries = 'unsecapp.exe', 'wmiadap.exe', 'wmiapsrv.exe', 'wmiprvse.exe', 'scrcons.exe'
+foreach ($wbemPath in @("$env:SystemRoot\System32\wbem", "$env:SystemRoot\SysWOW64\wbem")) {
+    if (-not (Test-Path -Path $wbemPath)) { continue }
+    Push-Location -Path $wbemPath
+    foreach ($binary in $wmiBinaries) {
+        if (Test-Path -Path $binary) {
+            Write-Output "  Registering $binary"
+            & ".\$binary" /RegServer
+        } elseif ($wbemPath -eq "$env:SystemRoot\System32\wbem") {
+            Write-Warning "  $binary not found in $wbemPath"
+        }
+    }
+    Pop-Location
 }
 
-if([System.Environment]::OSVersion.Version.Major -eq 5) 
-{
-   foreach ($sWMIPath in @(($ENV:SystemRoot+"\System32\wbem"),($ENV:SystemRoot+"\SysWOW64\wbem"))){
-   		if(Test-Path -Path $sWMIPath){
-			push-Location $sWMIPath
-			Write-Host " Register WMI Managed Objects"
-			dir /b *.mof *.mfl | findstr /v /i uninstall > moflist.txt 
-			$aWMIManagedObjects=get-content .\moflist.txt #Get-ChildItem * -Include @("*.mof","*.mfl")
-			foreach($sWMIObject in $aWMIManagedObjects){
-				$oWMIObject=Get-Item -Path  $sWMIObject
-				& mofcomp $oWMIObject.FullName				
-			}
-			Pop-Location
-		}
-   }
-   if([System.Environment]::OSVersion.Version.Minor -eq 1)
-   {
-   		& rundll32 wbemupgd,UpgradeRepository
-   }
-   else{
-   		& rundll32 wbemupgd,RepairWMISetup
-   }
+Write-Output 'Resetting and salvaging the WMI repository...'
+& "$env:SystemRoot\System32\wbem\winmgmt.exe" /resetrepository
+& "$env:SystemRoot\System32\wbem\winmgmt.exe" /salvagerepository
+
+Write-Output 'Recompiling ConfigMgr client WMI managed objects...'
+Push-Location -Path 'C:\Windows\CCM'
+Get-ChildItem -Path . -Include '*.mof', '*.mfl' -Name | ForEach-Object {
+    & mofcomp.exe $_
 }
-else{
-	# Other Windows Vista, Server 2008 or greater
-	Write-Host " Reset Repository"
-	& ($ENV:SystemRoot+"\system32\wbem\winmgmt.exe") /resetrepository
-	& ($ENV:SystemRoot+"\system32\wbem\winmgmt.exe") /salvagerepository
-}
+Pop-Location
 
+Write-Output 'Restarting services...'
+Start-Service -Name Winmgmt
+Start-Service -Name CcmExec -ErrorAction SilentlyContinue
 
-
-push-Location C:\Windows\ccm
-Write-Host " Register SCCM WMI Managed Objects"
-			$aWMIManagedObjects=Get-ChildItem * -Include @("*.mof","*.mfl")
-			foreach($sWMIObject in $aWMIManagedObjects){
-				$oWMIObject=Get-Item -Path  $sWMIObject
-				& mofcomp $oWMIObject.FullName				
-			}
-			Pop-Location
-
-Start-Service winmgmt
-Start-Service ccmexec -ErrorAction SilentlyContinue
+Write-Output 'WMI repair complete.'

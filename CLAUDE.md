@@ -95,6 +95,9 @@ dotnet run --project src/CMClientCenter.App --arch x64
 - `appidsvc` (Application Identity) heißt unter diesem Namen seit Win10/11 oft nicht mehr direkt ansprechbar — vor `Stop-Service`/`Start-Service`-Aufrufen auf Dienstnamen immer `-ErrorAction SilentlyContinue` setzen, da sich Dienstnamen über Windows-Versionen ändern können.
 - `quser`/`query user`-Textausgabe nie per fixer `.Substring(n, m)`-Zeichenposition parsen (bricht bei langen Benutzernamen oder Locale-Änderungen) — Spaltenstart stattdessen über `IndexOf()` auf der Header-Zeile ermitteln.
 - Site-Server/DP-Dienste (WSUS, IIS `W3SVC`, `MSSQL$MICROSOFT##WID`) gehören nicht in die Client-Script-Bibliothek (`PSScripts/`) — eigener Ordner `PSScripts-SiteServer/`, der **nicht** im `.csproj` per `<Content Include>` referenziert wird, damit er nicht mit ausgeliefert wird und nicht in der "Run PS"-Liste auftaucht.
+- Toast-Benachrichtigungen über `[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]` funktionieren in PowerShell 5.1 nativ ohne Zusatzmodul (anders als in PowerShell Core/7, wo die WinRT-Assemblies fehlen) — aber **nur in der Session des angemeldeten Benutzers**, nicht aus einem SYSTEM-Kontext heraus. Da CMClientCenter-WinRM-Sessions typischerweise als SYSTEM laufen, jeden Toast-Aufruf in try/catch mit `msg *`-Fallback wrappen.
+- `while`-Schleifen ohne Timeout/Max-Retry sind ein wiederkehrendes Bug-Muster in mehreren der Original-Scripts (Dienst-Stop/Start-Polling) — immer mit fester Obergrenze (`for`-Schleife mit Attempt-Counter) statt unbegrenztem `while` umsetzen.
+- Bei parallelen/kopierten Codeblöcken (z.B. zwei fast identische Scheduled-Task-Definitionen) immer prüfen, ob Variablennamen beim Kopieren korrekt umbenannt wurden (`$T1.EndBoundary` vs. versehentlich `$T.EndBoundary`) — copy-paste-Tippfehler dieser Art sind leicht zu übersehen, da der Code syntaktisch gültig bleibt.
 
 ## WinUI 3 Constraints
 
