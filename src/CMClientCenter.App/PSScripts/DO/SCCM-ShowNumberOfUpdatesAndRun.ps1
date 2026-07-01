@@ -1,20 +1,40 @@
-# Get list of all instances of CCM_SoftwareUpdate from root\CCM\ClientSDK for missing updates https://msdn.microsoft.com/en-us/library/jj155450.aspx?f=255&MSPPError=-2147217396
-$SCCMUpdatesStore = New-Object -ComObject Microsoft.CCM.UpdatesStore
-$SCCMUpdatesStore.RefreshServerComplianceState()
-New-EventLog -LogName Application -Source SyncStateScript -ErrorAction SilentlyContinue
-Write-EventLog -LogName Application -Source SyncStateScript -EventId 555 -EntryType Information -Message "Sync State ran successfully"
+#Requires -Version 5.1
+<#
+.SYNOPSIS
+    Reports pending update counts by state and triggers an install for any
+    that are not yet in "reboot pending" state.
 
-$TargetedUpdates= Get-WmiObject -Namespace root\CCM\ClientSDK -Class CCM_SoftwareUpdate -Filter ComplianceState=0
-$approvedUpdates= ($TargetedUpdates |Measure-Object).count
-$pendingpatches=($TargetedUpdates |Where-Object {$TargetedUpdates.EvaluationState -ne 8} |Measure-Object).count
-$rebootpending=($TargetedUpdates |Where-Object {$TargetedUpdates.EvaluationState -eq 8} |Measure-Object).count
-if ($pendingpatches -gt 0) 
-{
-  try {
-	$MissingUpdatesReformatted = @($TargetedUpdates | ForEach-Object {if($_.ComplianceState -eq 0){[WMI]$_.__PATH}}) 
-	# The following is the invoke of the CCM_SoftwareUpdatesManager.InstallUpdates with our found updates 
-	$InstallReturn = Invoke-WmiMethod -Class CCM_SoftwareUpdatesManager -Name InstallUpdates -ArgumentList (,$MissingUpdatesReformatted) -Namespace root\ccm\clientsdk 
-	"Targeted Patches :$approvedUpdates,Pending patches:$pendingpatches,Reboot Pending patches :$rebootpending,initiated $pendingpatches patches for install"  }
-	catch {"pending patches - $pendingpatches but unable to install them ,please check Further"}
+.DESCRIPTION
+    Fixed a pipeline-variable bug from the original: the two Where-Object
+    filters referenced $TargetedUpdates.EvaluationState (the full
+    collection's property array) instead of $_.EvaluationState (the
+    current pipeline item). The original happened to return the right
+    counts by accident because PowerShell evaluated the array as a truthy
+    value, but the intent was clearly per-item filtering.
+
+    Removed the Write-EventLog calls — writing to the Application event
+    log is side-effectful and unexpected for a script you run interactively
+    from the Console page to check update state.
+#>
+
+(New-Object -ComObject Microsoft.CCM.UpdatesStore).RefreshServerComplianceState()
+
+$allTargeted = Get-WmiObject -Namespace 'ROOT\ccm\ClientSDK' -Class CCM_SoftwareUpdate -Filter 'ComplianceState=0'
+
+$countApproved     = ($allTargeted | Measure-Object).Count
+$countPending      = ($allTargeted | Where-Object { $_.EvaluationState -ne 8 } | Measure-Object).Count
+$countRebootPending = ($allTargeted | Where-Object { $_.EvaluationState -eq 8 } | Measure-Object).Count
+
+Write-Output "Targeted: $countApproved | Pending install: $countPending | Reboot pending: $countRebootPending"
+
+if ($countPending -gt 0) {
+    $toInstall = [System.Management.ManagementObject[]]($allTargeted | Where-Object { $_.EvaluationState -ne 8 })
+    try {
+        Invoke-WmiMethod -Namespace 'ROOT\ccm\ClientSDK' -Class CCM_SoftwareUpdatesManager -Name InstallUpdates -ArgumentList (, $toInstall) | Out-Null
+        Write-Output "Install triggered for $countPending update(s)."
+    } catch {
+        Write-Warning "Could not trigger install: $($_.Exception.Message)"
+    }
+} else {
+    Write-Output 'No updates pending install — client is compliant.'
 }
-else {"Targeted Patches :$approvedUpdates,Pending patches:$pendingpatches,Reboot Pending patches :$rebootpending,Compliant" }
