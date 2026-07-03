@@ -1,6 +1,6 @@
 # Source & License
 
-The scripts in this folder (and its subfolders `DO`, `FIX`, `GET`) were
+The scripts in this folder (and its subfolders `Actions`, `Repair`, `Info`, `Install`) were
 originally based on the **"Client Center for Configuration Manager"**
 project by Roger Zander:
 
@@ -25,11 +25,13 @@ app update may overwrite this folder's contents.
 
 Three scripts that originally lived under a `SCCM-DP` subfolder here
 (LEDBAT check, DP content validation, WSUS service check) were moved out to
-`..\PSScripts-SiteServer\` — they target Distribution Point / Site Server
-services (WSUS, IIS, the WID database) rather than the managed client, so
-they don't belong in a client-facing "Run PS" list and aren't shipped
-(no `<Content Include>` entry in the `.csproj` references that folder). See
-that folder's own `LICENSE-and-SOURCE.md` for the same Ms-PL attribution.
+`..\PSScripts-SiteServer\` and renamed to `Set-LedbatCongestionControl.ps1`,
+`Invoke-DpContentValidation.ps1`, and `Repair-WsusServices.ps1`. They target
+Distribution Point / Site Server services (WSUS, IIS, the WID database)
+rather than the managed client, so they don't belong in a client-facing
+"Run PS" list and aren't shipped (no `<Content Include>` entry in the
+`.csproj` references that folder). See that folder's own
+`LICENSE-and-SOURCE.md` for the same Ms-PL attribution.
 
 ---
 
