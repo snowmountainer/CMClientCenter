@@ -16,4 +16,4 @@ Get-ChildItem -Path 'C:\Users' -Directory | ForEach-Object {
         SizeMB   = [Math]::Round($bytes / 1MB, 2)
         SizeGB   = [Math]::Round($bytes / 1GB, 2)
     }
-} | Sort-Object SizeMB -Descending | Format-Table -AutoSize
+} | Sort-Object SizeMB -Descending | Format-Table -AutoSize | Out-String -Width 200

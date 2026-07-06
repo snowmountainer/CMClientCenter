@@ -15,9 +15,17 @@
 
 Write-Output 'Repairing remote communication prerequisites...'
 
-# Windows Firewall service must be running for WinRM/DCOM to negotiate at all
-Set-Service -Name MpsSvc -StartupType Automatic
-Start-Service -Name MpsSvc -ErrorAction SilentlyContinue
+# Windows Firewall service must be running for WinRM/DCOM to negotiate at all.
+# On CIS L2-hardened clients MpsSvc is protected against reconfiguration even
+# for admins, so only touch it if it isn't already in the desired state.
+if ((Get-Service -Name MpsSvc).Status -ne 'Running') {
+    try {
+        Set-Service -Name MpsSvc -StartupType Automatic -ErrorAction Stop
+        Start-Service -Name MpsSvc -ErrorAction Stop
+    } catch {
+        Write-Warning "  MpsSvc could not be reconfigured (likely policy-protected): $($_.Exception.Message)"
+    }
+}
 
 # WinRM service set to auto-start and (re)enabled — this also creates the
 # default listener and the matching firewall rule group.

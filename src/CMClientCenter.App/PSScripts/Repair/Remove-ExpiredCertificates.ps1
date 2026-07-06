@@ -65,7 +65,7 @@ elseif (($validCert -eq 0) -and ($certs.Count -ge 1)) {
 	}
 	$store.Close()
 	#Run gpupdate to download new certs
-	GPUPDATE /FORCE /SCOPE COMPUTER
+	GPUPDATE /Target:Computer /Force
     return 4
     }
 else {

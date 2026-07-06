@@ -1,1 +1,1 @@
-"Missing upd:" + @(get-wmiobject -query "SELECT * FROM CCM_SoftwareUpdate" -namespace "ROOT\ccm\ClientSDK").count
+"Missing upd:" + @(get-wmiobject -query "SELECT * FROM CCM_SoftwareUpdate WHERE ComplianceState=0" -namespace "ROOT\ccm\ClientSDK").count

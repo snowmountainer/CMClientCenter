@@ -16,8 +16,16 @@
     actually set.
 #>
 
-Set-Service -Name MpsSvc -StartupType Automatic
-Start-Service -Name MpsSvc
+# On CIS L2-hardened clients MpsSvc is protected against reconfiguration even
+# for admins, so only touch it if it isn't already in the desired state.
+if ((Get-Service -Name MpsSvc).Status -ne 'Running') {
+    try {
+        Set-Service -Name MpsSvc -StartupType Automatic -ErrorAction Stop
+        Start-Service -Name MpsSvc -ErrorAction Stop
+    } catch {
+        Write-Warning "MpsSvc could not be reconfigured (likely policy-protected): $($_.Exception.Message)"
+    }
+}
 
 $clearAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-command &{Get-BitsTransfer -AllUsers | Where-Object { $_.JobState -eq "TransientError" } | Remove-BitsTransfer}'
 $clearTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddSeconds(10)
