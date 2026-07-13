@@ -28,10 +28,14 @@ catch {
         }
     }
     catch {
+        # Append the HResult as a fixed hex code so callers can match on it
+        # regardless of the OS UI language (the exception text itself is
+        # localized by Windows, e.g. "Not found" vs. "Nicht gefunden").
+        $hresult = "0x{0:X8}" -f $_.Exception.HResult
         [PSCustomObject]@{
             Success     = $false
             ReturnValue = -1
-            Message     = $_.Exception.Message
+            Message     = "$($_.Exception.Message) ($hresult)"
         }
     }
 }

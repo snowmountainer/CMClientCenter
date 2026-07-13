@@ -117,25 +117,31 @@ public partial class ActionsViewModel(IActionService actionService) : Observable
         var result = await actionService.TriggerActionAsync(action.ActionType);
         LastResult = result.IsSuccess
             ? $"✓ {action.Name} triggered successfully"
-            : $"✗ {BuildErrorMessage(action, result.ErrorMessage)}";
+            : $"✗ {BuildErrorMessage(result.ErrorMessage)}";
         IsBusy = false;
     }
 
-    private static string BuildErrorMessage(CMAction action, string? error)
+    private static string BuildErrorMessage(string? error)
     {
-        // User-scoped schedules (User Policy Retrieval/Evaluation) are only registered
-        // by the client when an interactive user session is logged on. Without one,
-        // TriggerSchedule fails with "Not found" — that's expected client behavior,
-        // not a bug, so we surface a clearer hint instead of the raw WMI error.
-        var isUserPolicyAction = action.ActionType
-            is CMActionType.UserPolicyRequest or CMActionType.UserPolicyEval;
+        // Several schedule IDs are only registered by the client on demand, when the
+        // corresponding component/policy is actually active on this device — e.g.
+        // User Policy schedules require an interactive logon session, DCM Policy
+        // requires a deployed compliance baseline, Endpoint Protection schedules
+        // require the EP client component, etc. In that case TriggerSchedule fails
+        // with WBEM_E_NOT_FOUND (0x80041002). That's expected client behavior, not
+        // a bug, so we surface a clearer hint instead of just the raw WMI error.
+        //
+        // We match on the hex HResult rather than the exception text, because the
+        // text itself is localized by Windows (e.g. "Not found" vs. "Nicht gefunden").
+        const string NotFoundHResult = "80041002";
 
-        if (isUserPolicyAction &&
-            error?.Contains("not found", StringComparison.OrdinalIgnoreCase) == true)
+        if (error?.Contains(NotFoundHResult, StringComparison.OrdinalIgnoreCase) == true)
         {
-            return $"Error: {error} — dieser Schedule wird vom Client erst registriert, " +
-                   "wenn ein Benutzer interaktiv angemeldet ist (Konsole/RDP). " +
-                   "Auf Systemen ohne aktive Benutzersitzung ist dieses Ergebnis erwartet.";
+            return $"Error: {error} — this schedule is not currently registered on the " +
+                   "client. This is expected if the related component or policy " +
+                   "(e.g. compliance baseline, Endpoint Protection, a pending update " +
+                   "install, or an interactive user logon for user policy schedules) " +
+                   "is not active on this device.";
         }
 
         return $"Error: {error}";

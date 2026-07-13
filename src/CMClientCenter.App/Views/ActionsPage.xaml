@@ -46,11 +46,11 @@
         <ItemsControl x:Name="ActionsList"
                       ItemTemplate="{StaticResource ActionItemTemplate}"/>
 
-        <Expander Header="Erweiterte Aktionen (Troubleshooting)" IsExpanded="False"
+        <Expander Header="Advanced Actions (Troubleshooting)" IsExpanded="False"
                   HorizontalContentAlignment="Stretch" HorizontalAlignment="Stretch">
             <StackPanel Spacing="8" Padding="0,8,0,0">
                 <InfoBar IsOpen="True" IsClosable="False" Severity="Informational"
-                         Message="Diese Aktionen werden im normalen Betrieb nicht benötigt. Nach dem Trigger bitte SMSClientMethodProvider.log prüfen."/>
+                         Message="These actions are not needed in normal operation. After triggering, check SMSClientMethodProvider.log."/>
                 <ItemsControl x:Name="AdvancedActionsList"
                               ItemTemplate="{StaticResource ActionItemTemplate}"/>
             </StackPanel>
