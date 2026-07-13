@@ -107,18 +107,41 @@ public record HealthCheck(
 public record CMAction(
     string Name,
     CMActionType ActionType,
-    string Description
+    string Description,
+    ActionCategory Category = ActionCategory.Standard
 )
 {
     public static IReadOnlyList<CMAction> AllActions =>
     [
-        new("Machine Policy Retrieval",    CMActionType.MachinePolicy,           "Retrieves machine policies from the MP"),
-        new("Discovery Data Collection",   CMActionType.DiscoveryDataCollection,  "Sends discovery data to the site server"),
-        new("Software Inventory",          CMActionType.SoftwareInventory,        "Runs a software inventory scan"),
-        new("Hardware Inventory",          CMActionType.HardwareInventory,        "Runs a hardware inventory scan"),
-        new("Software Updates Deployment", CMActionType.UpdateDeployment,         "Checks for and installs updates"),
-        new("Software Updates Scan",       CMActionType.UpdateScan,               "Scans for available updates"),
-        new("Application Deployment",      CMActionType.ApplicationDeployment,    "Evaluates application deployments"),
+        // ── Standard (entspricht der klassischen ConfigMgr-Systemsteuerung "Actions"-Seite) ──
+        new("Hardware Inventory Cycle",                    CMActionType.HardwareInventory,       "Runs a hardware inventory scan"),
+        new("Software Inventory Cycle",                    CMActionType.SoftwareInventory,       "Runs a software inventory scan"),
+        new("Discovery Data Collection Cycle",              CMActionType.DiscoveryDataCollection, "Sends discovery data to the site server"),
+        new("File Collection Cycle",                        CMActionType.FileCollection,          "Collects configured files from the client"),
+        new("Machine Policy Retrieval Cycle",                CMActionType.MachinePolicy,           "Retrieves machine policies from the MP"),
+        new("Machine Policy Evaluation Cycle",               CMActionType.MachinePolicyEval,       "Re-evaluates already retrieved machine policies"),
+        new("User Policy Retrieval Cycle",                   CMActionType.UserPolicyRequest,       "Retrieves user policies from the MP"),
+        new("User Policy Evaluation Cycle",                  CMActionType.UserPolicyEval,          "Re-evaluates already retrieved user policies"),
+        new("Software Metering Usage Report Cycle",          CMActionType.SoftwareMeteringReport,  "Sends software metering usage data"),
+        new("Windows Installer Source List Update Cycle",    CMActionType.SourceUpdate,            "Updates MSI source list locations"),
+        new("Software Updates Deployment Evaluation Cycle",  CMActionType.UpdateDeployment,         "Checks for and installs updates"),
+        new("Software Updates Scan Cycle",                   CMActionType.UpdateScan,               "Scans for available updates"),
+        new("Application Deployment Evaluation Cycle",       CMActionType.ApplicationDeployment,    "Evaluates application deployments"),
+
+        // ── Erweitert (seltener benötigt, primär Troubleshooting) ──
+        new("Software Updates Install Cycle (SUM)",          CMActionType.SumUpdatesInstall,             "Triggers install of already-scanned updates", ActionCategory.Advanced),
+        new("DCM Policy",                                    CMActionType.DcmPolicy,                     "Re-evaluates Desired Configuration Management policy", ActionCategory.Advanced),
+        new("Send Unsent State Messages",                    CMActionType.SendUnsentStateMessage,        "Flushes queued state messages to the MP", ActionCategory.Advanced),
+        new("State System Policy Cache Cleanout",            CMActionType.StateSystemPolicyCacheCleanout, "Cleans the state system policy cache", ActionCategory.Advanced),
+        new("Update Store Policy",                           CMActionType.UpdateStorePolicy,             "Updates the update store policy", ActionCategory.Advanced),
+        new("State System Bulk Send (High)",                 CMActionType.StateSystemBulkSendHigh,       "Forces high-priority bulk state message send", ActionCategory.Advanced),
+        new("State System Bulk Send (Low)",                  CMActionType.StateSystemBulkSendLow,        "Forces low-priority bulk state message send", ActionCategory.Advanced),
+        new("Application Manager User Policy Action",        CMActionType.ApplicationUserPolicyAction,   "Re-evaluates user-targeted app deployments", ActionCategory.Advanced),
+        new("Application Manager Global Evaluation",         CMActionType.ApplicationGlobalEvaluation,   "Full re-evaluation of all app deployments", ActionCategory.Advanced),
+        new("Power Management Start Summarizer",             CMActionType.PowerManagementSummarizer,     "Starts power management data summarization", ActionCategory.Advanced),
+        new("Endpoint Protection Deployment Reevaluate",     CMActionType.EndpointDeploymentReevaluate,  "Re-evaluates Endpoint Protection deployment", ActionCategory.Advanced),
+        new("Endpoint AM Policy Reevaluate",                 CMActionType.EndpointAMPolicyReevaluate,    "Re-evaluates Endpoint Protection AM policy", ActionCategory.Advanced),
+        new("External Event Detection",                      CMActionType.ExternalEventDetection,        "Triggers external event detection", ActionCategory.Advanced),
     ];
 }
 

@@ -27,5 +27,31 @@ public enum CMActionType
     SoftwareMeteringReport = 7,
     SourceUpdate           = 8,
     FileCollection         = 9,
-    ApplicationDeployment  = 10
+    ApplicationDeployment  = 10,
+
+    // ── Standard-Ergänzungen ──
+    MachinePolicyEval      = 11,
+    UserPolicyRequest      = 12,
+    UserPolicyEval         = 13,
+
+    // ── Erweitert / Troubleshooting ──
+    SumUpdatesInstall              = 20,
+    DcmPolicy                      = 21,
+    SendUnsentStateMessage         = 22,
+    StateSystemPolicyCacheCleanout = 23,
+    UpdateStorePolicy              = 24,
+    StateSystemBulkSendHigh        = 25,
+    StateSystemBulkSendLow         = 26,
+    ApplicationUserPolicyAction    = 27,
+    ApplicationGlobalEvaluation    = 28,
+    PowerManagementSummarizer      = 29,
+    EndpointDeploymentReevaluate   = 30,
+    EndpointAMPolicyReevaluate     = 31,
+    ExternalEventDetection         = 32
+}
+
+public enum ActionCategory
+{
+    Standard,
+    Advanced
 }

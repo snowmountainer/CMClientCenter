@@ -133,13 +133,35 @@ public class ActionExecutor(RunspaceManager runspace, ILogger<ActionExecutor> lo
     private static readonly IReadOnlyDictionary<CMActionType, string> _scheduleIds =
         new Dictionary<CMActionType, string>
         {
+            // ── Standard ──
             [CMActionType.MachinePolicy]           = "{00000000-0000-0000-0000-000000000021}",
+            [CMActionType.MachinePolicyEval]       = "{00000000-0000-0000-0000-000000000022}",
             [CMActionType.DiscoveryDataCollection] = "{00000000-0000-0000-0000-000000000003}",
             [CMActionType.SoftwareInventory]       = "{00000000-0000-0000-0000-000000000002}",
             [CMActionType.HardwareInventory]       = "{00000000-0000-0000-0000-000000000001}",
+            [CMActionType.FileCollection]          = "{00000000-0000-0000-0000-000000000010}",
+            [CMActionType.UserPolicyRequest]       = "{00000000-0000-0000-0000-000000000026}",
+            [CMActionType.UserPolicyEval]          = "{00000000-0000-0000-0000-000000000027}",
+            [CMActionType.SoftwareMeteringReport]  = "{00000000-0000-0000-0000-000000000031}",
+            [CMActionType.SourceUpdate]            = "{00000000-0000-0000-0000-000000000032}",
             [CMActionType.UpdateDeployment]        = "{00000000-0000-0000-0000-000000000108}",
             [CMActionType.UpdateScan]              = "{00000000-0000-0000-0000-000000000113}",
             [CMActionType.ApplicationDeployment]   = "{00000000-0000-0000-0000-000000000121}",
+
+            // ── Erweitert / Troubleshooting ──
+            [CMActionType.SumUpdatesInstall]              = "{00000000-0000-0000-0000-000000000063}",
+            [CMActionType.DcmPolicy]                       = "{00000000-0000-0000-0000-000000000110}",
+            [CMActionType.SendUnsentStateMessage]          = "{00000000-0000-0000-0000-000000000111}",
+            [CMActionType.StateSystemPolicyCacheCleanout]  = "{00000000-0000-0000-0000-000000000112}",
+            [CMActionType.UpdateStorePolicy]               = "{00000000-0000-0000-0000-000000000114}",
+            [CMActionType.StateSystemBulkSendHigh]         = "{00000000-0000-0000-0000-000000000115}",
+            [CMActionType.StateSystemBulkSendLow]          = "{00000000-0000-0000-0000-000000000116}",
+            [CMActionType.ApplicationUserPolicyAction]     = "{00000000-0000-0000-0000-000000000122}",
+            [CMActionType.ApplicationGlobalEvaluation]     = "{00000000-0000-0000-0000-000000000123}",
+            [CMActionType.PowerManagementSummarizer]       = "{00000000-0000-0000-0000-000000000131}",
+            [CMActionType.EndpointDeploymentReevaluate]    = "{00000000-0000-0000-0000-000000000221}",
+            [CMActionType.EndpointAMPolicyReevaluate]      = "{00000000-0000-0000-0000-000000000222}",
+            [CMActionType.ExternalEventDetection]          = "{00000000-0000-0000-0000-000000000223}",
         };
 
     public async Task<Result> TriggerAsync(CMActionType action, CancellationToken ct = default)

@@ -5,6 +5,33 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:CMClientCenter.Core.Models">
 
+    <Page.Resources>
+        <DataTemplate x:Key="ActionItemTemplate" x:DataType="models:CMAction">
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1" CornerRadius="8"
+                    Padding="16,12" Margin="0,0,0,8">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="{x:Bind Name}"
+                                   Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                        <TextBlock Text="{x:Bind Description}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   FontSize="12"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="Trigger"
+                            VerticalAlignment="Center" MinWidth="100"
+                            Tag="{x:Bind}"
+                            Click="ActionButton_Click"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </Page.Resources>
+
     <StackPanel Spacing="16" Padding="0,0,16,16">
         <TextBlock Text="CM Actions" Style="{StaticResource TitleTextBlockStyle}"/>
 
@@ -13,34 +40,18 @@
 
         <InfoBar x:Name="ResultBar" IsOpen="False" IsClosable="True"/>
 
-        <ItemsControl x:Name="ActionsList">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="models:CMAction">
-                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                            BorderThickness="1" CornerRadius="8"
-                            Padding="16,12" Margin="0,0,0,8">
-                        <Grid ColumnSpacing="16">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Spacing="2">
-                                <TextBlock Text="{x:Bind Name}"
-                                           Style="{StaticResource BodyStrongTextBlockStyle}"/>
-                                <TextBlock Text="{x:Bind Description}"
-                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                           FontSize="12"/>
-                            </StackPanel>
-                            <Button Grid.Column="1" Content="Trigger"
-                                    VerticalAlignment="Center" MinWidth="100"
-                                    Tag="{x:Bind}"
-                                    Click="ActionButton_Click"/>
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <ItemsControl x:Name="ActionsList"
+                      ItemTemplate="{StaticResource ActionItemTemplate}"/>
+
+        <Expander Header="Erweiterte Aktionen (Troubleshooting)" IsExpanded="False"
+                  HorizontalContentAlignment="Stretch" HorizontalAlignment="Stretch">
+            <StackPanel Spacing="8" Padding="0,8,0,0">
+                <InfoBar IsOpen="True" IsClosable="False" Severity="Informational"
+                         Message="Diese Aktionen werden im normalen Betrieb nicht benötigt. Nach dem Trigger bitte SMSClientMethodProvider.log prüfen."/>
+                <ItemsControl x:Name="AdvancedActionsList"
+                              ItemTemplate="{StaticResource ActionItemTemplate}"/>
+            </StackPanel>
+        </Expander>
 
         <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"

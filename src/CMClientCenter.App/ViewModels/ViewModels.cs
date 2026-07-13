@@ -1,5 +1,6 @@
 using CMClientCenter.Core.Interfaces;
 using CMClientCenter.Core.Models;
+using CMClientCenter.Shared.Enums;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -98,7 +99,14 @@ public partial class SoftwareViewModel(ISoftwareService softwareService) : Obser
 
 public partial class ActionsViewModel(IActionService actionService) : ObservableObject
 {
-    public IReadOnlyList<CMAction> Actions => actionService.GetAvailableActions();
+    public IReadOnlyList<CMAction> Actions =>
+        actionService.GetAvailableActions()
+            .Where(a => a.Category == ActionCategory.Standard).ToList();
+
+    public IReadOnlyList<CMAction> AdvancedActions =>
+        actionService.GetAvailableActions()
+            .Where(a => a.Category == ActionCategory.Advanced).ToList();
+
     [ObservableProperty] public partial bool IsBusy { get; set; }
     [ObservableProperty] public partial string? LastResult { get; set; }
 

@@ -24,6 +24,7 @@ public sealed partial class ActionsPage : Page
         InitializeComponent();
 
         ActionsList.ItemsSource = ViewModel.Actions;
+        AdvancedActionsList.ItemsSource = ViewModel.AdvancedActions;
 
         UpdateConnectionState(_connectionService.IsConnected);
         _connectionService.ConnectionStateChanged += OnConnectionChanged;
@@ -51,6 +52,7 @@ public sealed partial class ActionsPage : Page
     {
         NotConnectedBar.IsOpen  = !connected;
         ActionsList.IsEnabled   = connected;
+        AdvancedActionsList.IsEnabled = connected;
     }
 
     private async void ActionButton_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
@@ -73,7 +75,10 @@ public sealed partial class ActionsPage : Page
         {
             // Ensure we're back on the UI thread
             _dispatcher.TryEnqueue(() =>
-                ActionsList.IsEnabled = _connectionService.IsConnected);
+            {
+                ActionsList.IsEnabled = _connectionService.IsConnected;
+                AdvancedActionsList.IsEnabled = _connectionService.IsConnected;
+            });
         }
     }
 
