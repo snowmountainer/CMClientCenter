@@ -117,8 +117,28 @@ public partial class ActionsViewModel(IActionService actionService) : Observable
         var result = await actionService.TriggerActionAsync(action.ActionType);
         LastResult = result.IsSuccess
             ? $"✓ {action.Name} triggered successfully"
-            : $"✗ Error: {result.ErrorMessage}";
+            : $"✗ {BuildErrorMessage(action, result.ErrorMessage)}";
         IsBusy = false;
+    }
+
+    private static string BuildErrorMessage(CMAction action, string? error)
+    {
+        // User-scoped schedules (User Policy Retrieval/Evaluation) are only registered
+        // by the client when an interactive user session is logged on. Without one,
+        // TriggerSchedule fails with "Not found" — that's expected client behavior,
+        // not a bug, so we surface a clearer hint instead of the raw WMI error.
+        var isUserPolicyAction = action.ActionType
+            is CMActionType.UserPolicyRequest or CMActionType.UserPolicyEval;
+
+        if (isUserPolicyAction &&
+            error?.Contains("not found", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return $"Error: {error} — dieser Schedule wird vom Client erst registriert, " +
+                   "wenn ein Benutzer interaktiv angemeldet ist (Konsole/RDP). " +
+                   "Auf Systemen ohne aktive Benutzersitzung ist dieses Ergebnis erwartet.";
+        }
+
+        return $"Error: {error}";
     }
 }
 

@@ -32,7 +32,10 @@
         </DataTemplate>
     </Page.Resources>
 
-    <StackPanel Spacing="16" Padding="0,0,16,16">
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
+                  Padding="0,0,16,16">
+    <StackPanel Spacing="16">
         <TextBlock Text="CM Actions" Style="{StaticResource TitleTextBlockStyle}"/>
 
         <InfoBar x:Name="NotConnectedBar" IsOpen="True" IsClosable="False"
@@ -81,4 +84,5 @@
             </Grid>
         </Border>
     </StackPanel>
+    </ScrollViewer>
 </Page>
