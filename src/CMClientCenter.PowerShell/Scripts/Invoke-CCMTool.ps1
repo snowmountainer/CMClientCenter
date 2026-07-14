@@ -79,6 +79,41 @@ switch ($ToolAction) {
         }
     }
 
+    "ResetPolicy" {
+        try {
+            # Mirrors "Reset Policy" from Client Center for Configuration Manager:
+            # 1) purge locally cached machine policy/CI assignments (ResetPolicy uFlags=1)
+            # 2) trigger Machine Policy Agent Cleanup  ({...040})
+            # 3) trigger Machine Policy Retrieval Cycle ({...021})
+            try {
+                Invoke-CimMethod -Namespace "ROOT\ccm" -ClassName "SMS_Client" `
+                    -MethodName "ResetPolicy" -Arguments @{ uFlags = [uint32]1 } `
+                    -ErrorAction Stop | Out-Null
+            } catch {
+                ([wmiclass]"ROOT\ccm:SMS_Client").ResetPolicy(1) | Out-Null
+            }
+
+            foreach ($scheduleId in @(
+                "{00000000-0000-0000-0000-000000000040}",
+                "{00000000-0000-0000-0000-000000000021}"
+            )) {
+                try {
+                    Invoke-CimMethod -Namespace "ROOT\ccm" -ClassName "SMS_Client" `
+                        -MethodName "TriggerSchedule" -Arguments @{ sScheduleID = $scheduleId } `
+                        -ErrorAction Stop | Out-Null
+                } catch {
+                    ([wmiclass]"ROOT\ccm:SMS_Client").TriggerSchedule($scheduleId) | Out-Null
+                }
+            }
+
+            $result.Success = $true
+            $result.Message = "Policy reset. Cleanup and retrieval cycles triggered — re-download may take a minute."
+        } catch {
+            $hresult = "0x{0:X8}" -f $_.Exception.HResult
+            $result.Message = "Reset policy failed: $($_.Exception.Message) ($hresult)"
+        }
+    }
+
     "RebootNow" {
         try {
             Start-Process -FilePath "shutdown.exe" `

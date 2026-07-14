@@ -28,6 +28,7 @@ public sealed partial class ToolsPage : Page
         ClearCacheButton.Click   += async (_, _) => await RunTool("ClearCache");
         RepairButton.Click       += async (_, _) => await RunTool("RepairClient");
         ReinstallButton.Click    += async (_, _) => await RunTool("ReinstallClient");
+        ResetPolicyButton.Click  += async (_, _) => await RunTool("ResetPolicy");
         RebootButton.Click       += async (_, _) => await RunTool("RebootNow");
         CancelRebootButton.Click += async (_, _) => await RunTool("CancelReboot");
 
@@ -98,6 +99,7 @@ public sealed partial class ToolsPage : Page
         ClearCacheButton.IsEnabled   = enabled;
         RepairButton.IsEnabled       = enabled;
         ReinstallButton.IsEnabled    = enabled;
+        ResetPolicyButton.IsEnabled  = enabled;
         RebootButton.IsEnabled       = enabled;
         CancelRebootButton.IsEnabled = enabled;
     }

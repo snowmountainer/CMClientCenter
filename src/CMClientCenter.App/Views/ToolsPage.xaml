@@ -72,6 +72,23 @@
                 </StackPanel>
             </Border>
 
+            <!-- Client Policy -->
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1" CornerRadius="8" Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Client Policy" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                    <TextBlock TextWrapping="Wrap" FontSize="12"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Text="Purges cached machine policy and forces a full re-download. Use this when policy or deployment state looks stale or corrupted."/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Reset Policy" x:Name="ResetPolicyButton"/>
+                    </StackPanel>
+                    <InfoBar IsOpen="True" IsClosable="False" Severity="Warning"
+                             Message="The client has no assignments until policy re-download completes (usually under a minute). Avoid running this during active deployments."/>
+                </StackPanel>
+            </Border>
+
             <!-- Reboot -->
             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
