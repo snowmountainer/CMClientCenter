@@ -32,37 +32,31 @@
         </DataTemplate>
     </Page.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                  HorizontalScrollBarVisibility="Disabled"
-                  Padding="0,0,16,16">
-    <StackPanel Spacing="16">
-        <TextBlock Text="CM Actions" Style="{StaticResource TitleTextBlockStyle}"/>
+    <Grid RowSpacing="12" Padding="0,0,16,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-        <InfoBar x:Name="NotConnectedBar" IsOpen="True" IsClosable="False"
+        <TextBlock Grid.Row="0" Text="CM Actions" Style="{StaticResource TitleTextBlockStyle}"/>
+
+        <InfoBar Grid.Row="1" x:Name="NotConnectedBar" IsOpen="True" IsClosable="False"
                  Severity="Warning" Message="Please connect to a computer first."/>
 
-        <InfoBar x:Name="ResultBar" IsOpen="False" IsClosable="True"/>
+        <InfoBar Grid.Row="2" x:Name="ResultBar" IsOpen="False" IsClosable="True"/>
 
-        <ItemsControl x:Name="ActionsList"
-                      ItemTemplate="{StaticResource ActionItemTemplate}"/>
-
-        <Expander Header="Advanced Actions (Troubleshooting)" IsExpanded="False"
-                  HorizontalContentAlignment="Stretch" HorizontalAlignment="Stretch">
-            <StackPanel Spacing="8" Padding="0,8,0,0">
-                <InfoBar IsOpen="True" IsClosable="False" Severity="Informational"
-                         Message="These actions are not needed in normal operation. After triggering, check SMSClientMethodProvider.log."/>
-                <ItemsControl x:Name="AdvancedActionsList"
-                              ItemTemplate="{StaticResource ActionItemTemplate}"/>
-            </StackPanel>
-        </Expander>
-
-        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+        <!-- Execution Log: fixed at the top so it stays visible while scrolling the action lists below -->
+        <Border Grid.Row="3"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1" CornerRadius="8" Padding="12">
             <Grid RowSpacing="6">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="120"/>
+                    <RowDefinition Height="100"/>
                 </Grid.RowDefinitions>
                 <Grid Grid.Row="0">
                     <Grid.ColumnDefinitions>
@@ -83,6 +77,24 @@
                 </ScrollViewer>
             </Grid>
         </Border>
-    </StackPanel>
-    </ScrollViewer>
+
+        <ScrollViewer Grid.Row="4"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Spacing="16">
+                <ItemsControl x:Name="ActionsList"
+                              ItemTemplate="{StaticResource ActionItemTemplate}"/>
+
+                <Expander Header="Advanced Actions (Troubleshooting)" IsExpanded="False"
+                          HorizontalContentAlignment="Stretch" HorizontalAlignment="Stretch">
+                    <StackPanel Spacing="8" Padding="0,8,0,0">
+                        <InfoBar IsOpen="True" IsClosable="False" Severity="Informational"
+                                 Message="These actions are not needed in normal operation. After triggering, check SMSClientMethodProvider.log."/>
+                        <ItemsControl x:Name="AdvancedActionsList"
+                                      ItemTemplate="{StaticResource ActionItemTemplate}"/>
+                    </StackPanel>
+                </Expander>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
 </Page>
