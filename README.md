@@ -20,10 +20,10 @@ Built for Workplace Engineers who need a fast, modern tool to inspect and manage
 | **Agent Status** | Grouped health checks — Service, Client, Network, Cache, Inventory, Updates, System |
 | **Hardware** | System, CPU, RAM slots, GPU, Disks, OS with full UBR build number |
 | **Software** | Installed apps with filter and install date |
-| **Actions** | Trigger CM policies (Machine Policy, HW/SW Inventory, Updates, Discovery) |
+| **Actions** | Trigger CM client schedules — 13 Standard actions (Machine/User Policy, HW/SW Inventory, Discovery, File Collection, Software Metering, Source List Update, Software/Application Updates) plus a collapsible "Advanced" section with 13 further schedules (SUM install, DCM policy, Endpoint Protection, state messaging, ...) for troubleshooting |
 | **Software Center** | Applications (Install/Repair/Uninstall) and Operating Systems (Task Sequences, incl. OSD with high-impact confirmation dialog) |
 | **Updates** | All Updates / Pending Updates, with per-update Install action |
-| **Tools** | Clear CCM cache, Client repair/reinstall, Pending reboot |
+| **Tools** | Clear CCM cache, Client repair/reinstall, Reset Policy (purge cached machine policy + force re-download), Pending reboot |
 | **Console** | **Open Console** — interactive remote PowerShell session (`Enter-PSSession`) in a new window, pass-through Kerberos/NTLM. **Run PS** — built-in script library (70 scripts from the original Client Center tool, grouped by folder) plus your own custom `.ps1` scripts from a configurable folder, run against the connected computer with live, copyable output |
 | **Logs** | CCM log viewer with CMTrace format parsing, filter, color-coded severity, separate tabs for CCM Client / CCMSetup / PSADT logs, selectable/copyable entries (per-field selection, "Copy All", right-click "Copy line") |
 | **Settings** | Light/Dark/System theme, custom scripts folder location |

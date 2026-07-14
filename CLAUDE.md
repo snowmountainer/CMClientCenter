@@ -115,12 +115,48 @@ dotnet run --project src/CMClientCenter.App --arch x64
 
 ## CM Action Schedule IDs
 
-| Action                | ScheduleId                              |
-|-----------------------|-----------------------------------------|
-| Machine Policy        | {00000000-0000-0000-0000-000000000021}  |
-| Hardware Inventory    | {00000000-0000-0000-0000-000000000001}  |
-| Software Inventory    | {00000000-0000-0000-0000-000000000002}  |
-| Discovery Data        | {00000000-0000-0000-0000-000000000003}  |
-| Update Deployment     | {00000000-0000-0000-0000-000000000108}  |
-| Update Scan           | {00000000-0000-0000-0000-000000000113}  |
-| App Deployment        | {00000000-0000-0000-0000-000000000121}  |
+Quelle: `_scheduleIds` in `Executors.cs` (Trigger via `SMS_Client.TriggerSchedule`, siehe `Invoke-CMAction.ps1`). `CMAction.AllActions` in `Models.cs` hat zusätzlich ein `ActionCategory`-Flag (`Standard`/`Advanced`), das steuert, ob eine Action auf der Actions-Page in der Hauptliste oder im eingeklappten "Advanced Actions"-Expander landet.
+
+**Standard** (immer registriert, entspricht der klassischen ConfigMgr-Systemsteuerung-Actions-Seite):
+
+| Action                          | ScheduleId                              |
+|----------------------------------|-----------------------------------------|
+| Hardware Inventory Cycle         | {00000000-0000-0000-0000-000000000001}  |
+| Software Inventory Cycle         | {00000000-0000-0000-0000-000000000002}  |
+| Discovery Data Collection Cycle  | {00000000-0000-0000-0000-000000000003}  |
+| File Collection Cycle            | {00000000-0000-0000-0000-000000000010}  |
+| Machine Policy Retrieval Cycle   | {00000000-0000-0000-0000-000000000021}  |
+| Machine Policy Evaluation Cycle  | {00000000-0000-0000-0000-000000000022}  |
+| User Policy Retrieval Cycle      | {00000000-0000-0000-0000-000000000026}  |
+| User Policy Evaluation Cycle     | {00000000-0000-0000-0000-000000000027}  |
+| Software Metering Usage Report Cycle | {00000000-0000-0000-0000-000000000031} |
+| Windows Installer Source List Update Cycle | {00000000-0000-0000-0000-000000000032} |
+| Software Updates Deployment Evaluation Cycle | {00000000-0000-0000-0000-000000000108} |
+| Software Updates Scan Cycle      | {00000000-0000-0000-0000-000000000113}  |
+| Application Deployment Evaluation Cycle | {00000000-0000-0000-0000-000000000121} |
+
+**Advanced** (nur registriert, wenn die zugehörige Komponente/Policy auf dem Client aktiv ist — siehe Hinweis unten):
+
+| Action                          | ScheduleId                              |
+|----------------------------------|-----------------------------------------|
+| Software Updates Install Cycle (SUM) | {00000000-0000-0000-0000-000000000063} |
+| DCM Policy                       | {00000000-0000-0000-0000-000000000110}  |
+| Send Unsent State Messages       | {00000000-0000-0000-0000-000000000111}  |
+| State System Policy Cache Cleanout | {00000000-0000-0000-0000-000000000112} |
+| Update Store Policy              | {00000000-0000-0000-0000-000000000114}  |
+| State System Bulk Send (High)    | {00000000-0000-0000-0000-000000000115}  |
+| State System Bulk Send (Low)     | {00000000-0000-0000-0000-000000000116}  |
+| Application Manager User Policy Action | {00000000-0000-0000-0000-000000000122} |
+| Application Manager Global Evaluation | {00000000-0000-0000-0000-000000000123} |
+| Power Management Start Summarizer | {00000000-0000-0000-0000-000000000131} |
+| Endpoint Protection Deployment Reevaluate | {00000000-0000-0000-0000-000000000221} |
+| Endpoint AM Policy Reevaluate    | {00000000-0000-0000-0000-000000000222}  |
+| External Event Detection         | {00000000-0000-0000-0000-000000000223}  |
+
+**Bewusst nicht als Action aufgenommen:** Site-/DP-seitige Schedules ({...061} Peer DP Status, {...062} Peer DP Pending Package Check, {...109} PDP Maintenance — auf einem normalen Client wirkungslos/no-op) sowie reine interne Wartungsjobs ohne Mehrwert als manueller Button ({...011} IDMIF, {...023}–{...025}, {...037}, {...040}–{...043}, {...051}). Ausnahme: {...040} (Machine Policy Agent Cleanup) wird als Teil der zusammengesetzten "Reset Policy"-Tools-Aktion verwendet (siehe unten), nicht als eigenständige Actions-Page-Zeile.
+
+**WBEM_E_NOT_FOUND (0x80041002) ist bei TriggerSchedule kein Bug, sondern erwartetes Verhalten** für Schedules, die der Client nur dynamisch registriert, wenn die zugehörige Komponente/Policy aktiv ist — z.B. User-Policy-Schedules ohne interaktive Logon-Session, DCM Policy ohne deployte Compliance-Baseline, Endpoint-Protection-Schedules ohne installierte EP-Komponente, SUM Install Cycle ohne anstehende Update-Installation. `BuildErrorMessage()` in `ViewModels.cs` matcht dafür auf den Hex-HResult (nicht auf den lokalisierten Exception-Text — `[wmiclass]`-Fehlermeldungen sind OS-Sprache-abhängig) und zeigt einen erklärenden Hinweis statt der rohen WMI-Fehlermeldung. `Invoke-CMAction.ps1` hängt den HResult deshalb immer als fixen Hex-Code an die Message an.
+
+**Reset Policy** (Tools-Page, "Client Policy"-Karte, `Invoke-CCMTool.ps1` Case `"ResetPolicy"`): zusammengesetzte Aktion, mirrort "Reset Policy" aus dem Original Client Center — `SMS_Client.ResetPolicy(uFlags=1)`, dann `TriggerSchedule` auf {...040} (Machine Policy Agent Cleanup) und {...021} (Machine Policy Retrieval Cycle), in dieser Reihenfolge. Bewusst auf der Tools- statt der Actions-Page, da mehrstufig und mit Nebenwirkung (Client ist bis zum Re-Download kurzzeitig ohne Assignments) — passt zum bestehenden Muster von Clear Cache/Repair/Reinstall, nicht zu den 1:1-Schedule-Triggern auf Actions.
+
+**Projekt-Konvention:** Alle nutzersichtbaren Strings (Button-Labels, InfoBar-Texte, Fehlermeldungen, Log-Zeilen) sind konsequent Englisch — unabhängig von der Sprache der Konversation mit Claude/Entwickler beim Erstellen des Features.
