@@ -33,5 +33,21 @@
         </StackPanel>
 
         <TextBlock Text="TODO: WinRM timeout, credential storage" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="About" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1" CornerRadius="4" Padding="12">
+                <StackPanel Spacing="2">
+                    <TextBlock x:Name="AboutAppNameText" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="AboutVersionText" FontSize="12"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <HyperlinkButton x:Name="AboutRepoLink" Padding="0" Margin="0,4,0,0"
+                                     Content="github.com/snowmountainer/CMClientCenter"
+                                     NavigateUri="https://github.com/snowmountainer/CMClientCenter"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
     </StackPanel>
 </Page>

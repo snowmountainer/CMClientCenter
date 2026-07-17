@@ -5,6 +5,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace CMClientCenter.App.Views;
 
@@ -37,6 +38,37 @@ public sealed partial class SettingsPage : Page
 
         ScriptsFolderBox.Text = _settingsService.EffectiveScriptsFolder;
         BrowseScriptsFolderButton.Click += async (_, _) => await BrowseForScriptsFolderAsync();
+
+        InitializeAboutSection();
+    }
+
+    /// <summary>
+    /// Reads the version from the executing assembly instead of hardcoding a
+    /// string here, so this box never goes stale after a release bump.
+    ///
+    /// Uses InformationalVersion ("1.0.0+a1b2c3d[-dirty]") rather than
+    /// GetName().Version ("1.0.0.0") because the latter never carries the git
+    /// hash — SourceRevisionId (set in Directory.Build.props from `git
+    /// rev-parse`) only flows into InformationalVersion, not AssemblyVersion.
+    /// That's exactly what we want here: two people comparing "1.0.0" alone
+    /// can't tell if they're on the same commit; the hash makes that
+    /// unambiguous when reporting a bug or comparing builds.
+    /// </summary>
+    private void InitializeAboutSection()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        var informational = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion;
+
+        var version = assembly.GetName().Version?.ToString(3) ?? "0.0.0";
+        var commitHash = informational?.Contains('+') == true
+            ? informational[(informational.IndexOf('+') + 1)..]
+            : null;
+
+        AboutAppNameText.Text = "CMClientCenter";
+        AboutVersionText.Text = string.IsNullOrEmpty(commitHash)
+            ? $"Version {version}"
+            : $"Version {version} ({commitHash})";
     }
 
     private async void ThemeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)

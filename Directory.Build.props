@@ -21,4 +21,55 @@
   <PropertyGroup>
     <SatelliteResourceLanguages>en;de;fr;it</SatelliteResourceLanguages>
   </PropertyGroup>
+
+  <!--
+    Single source of truth for the app version. Bump this on every release;
+    it flows into AssemblyVersion/FileVersion/InformationalVersion for every
+    project (incl. CMClientCenter.App), and the Settings → About section reads
+    it back at runtime via Assembly.GetName().Version.
+  -->
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <!--
+    Stamps the short git commit hash into InformationalVersion, e.g.
+    "1.0.0+a1b2c3d". The .NET SDK does this automatically once SourceRevisionId
+    is set (IncludeSourceRevisionInInformationalVersion defaults to true) — no
+    SourceLink package required, we just need to populate SourceRevisionId
+    ourselves since we're not using SourceLink's git provider.
+
+    Runs before GetAssemblyVersion/GenerateAssemblyInfo so the value is in
+    place before AssemblyInfo is generated. Falls back silently (no crash, no
+    hash suffix) if git isn't on PATH or this is a source drop without a
+    .git folder (e.g. extracted from a zip) — IgnoreExitCode handles both.
+  -->
+  <Target Name="SetSourceRevisionIdFromGit"
+          BeforeTargets="GetAssemblyVersion;GenerateAssemblyInfo"
+          Condition="'$(SourceRevisionId)' == ''">
+    <Exec Command="git rev-parse --short=8 HEAD"
+          ConsoleToMSBuild="true"
+          IgnoreExitCode="true"
+          StandardOutputImportance="low"
+          EchoOff="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_GitCommitHash" />
+      <Output TaskParameter="ExitCode" PropertyName="_GitExitCode" />
+    </Exec>
+    <!-- Second call is cheap (same process would be nicer, but Exec only
+         gives one ConsoleOutput per call) and flags a dirty working tree,
+         since "which commit" is only half the story when the app was built
+         from uncommitted local changes. -->
+    <Exec Command="git status --porcelain"
+          Condition="'$(_GitExitCode)' == '0'"
+          ConsoleToMSBuild="true"
+          IgnoreExitCode="true"
+          StandardOutputImportance="low"
+          EchoOff="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_GitDirtyStatus" />
+    </Exec>
+    <PropertyGroup Condition="'$(_GitExitCode)' == '0' AND '$(_GitCommitHash)' != ''">
+      <SourceRevisionId Condition="'$(_GitDirtyStatus)' == ''">$(_GitCommitHash)</SourceRevisionId>
+      <SourceRevisionId Condition="'$(_GitDirtyStatus)' != ''">$(_GitCommitHash)-dirty</SourceRevisionId>
+    </PropertyGroup>
+  </Target>
 </Project>
