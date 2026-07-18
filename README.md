@@ -9,6 +9,21 @@ Built for Workplace Engineers who need a fast, modern tool to inspect and manage
 ![WinUI](https://img.shields.io/badge/WinUI-3-0078D4)
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-5391FE)
 ![License](https://img.shields.io/badge/license-GPL--3.0-blue)
+[![Latest Release](https://img.shields.io/github/v/release/snowmountainer/CMClientCenter?include_prereleases)](https://github.com/snowmountainer/CMClientCenter/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/snowmountainer/CMClientCenter/total)](https://github.com/snowmountainer/CMClientCenter/releases)
+
+---
+
+> [!WARNING]
+> **CMClientCenter can trigger destructive, hard-to-undo actions** on the
+> machines it connects to — resetting the Client GUID, purging cached policy,
+> repairing/reinstalling the CM client, forced reboots, and OSD task sequence
+> deployment. It is provided "as is", without warranty of any kind (see
+> [License](#license)). **Test against a non-production client or a lab
+> environment first**, and make sure whoever runs it understands what each
+> action does before pointing it at production. Actions with irreversible or
+> high-impact effects (e.g. OSD) already require an in-app confirmation
+> dialog, but that's not a substitute for knowing what you're about to do.
 
 ---
 
@@ -27,6 +42,23 @@ Built for Workplace Engineers who need a fast, modern tool to inspect and manage
 | **Console** | **Open Console** — interactive remote PowerShell session (`Enter-PSSession`) in a new window, pass-through Kerberos/NTLM. **Run PS** — built-in script library (70 scripts from the original Client Center tool, grouped by folder) plus your own custom `.ps1` scripts from a configurable folder, run against the connected computer with live, copyable output |
 | **Logs** | CCM log viewer with CMTrace format parsing, filter, color-coded severity, separate tabs for CCM Client / CCMSetup / PSADT logs, selectable/copyable entries (per-field selection, "Copy All", right-click "Copy line") |
 | **Settings** | Light/Dark/System theme, custom scripts folder location |
+
+## Installation
+
+**Download the latest release:** [github.com/snowmountainer/CMClientCenter/releases/latest](https://github.com/snowmountainer/CMClientCenter/releases/latest)
+
+Two artifacts are attached to every release:
+
+| Artifact | Use case | How |
+|---|---|---|
+| `CMClientCenter-<version>-win-x64-Setup.msi` | Normal install — Start Menu shortcut, clean uninstall via Add/Remove Programs, silent-deployable | Double-click, or `msiexec /i CMClientCenter-<version>-win-x64-Setup.msi /quiet` for Intune/MECM/GPO deployment. Installs to `C:\Program Files\snowmountainer\CMClientCenter`, requires admin rights |
+| `CMClientCenter-<version>-win-x64.zip` | Portable / xcopy-deploy, no install, no admin rights needed to unpack | Unzip anywhere, run `CMClientCenter.App.exe` directly |
+
+Both are self-contained — no separate .NET or Windows App SDK runtime install
+needed. See [Requirements](#requirements) below for OS/rights prerequisites.
+
+Building from source instead (e.g. to contribute) is covered under
+[Build](#build).
 
 ## Requirements
 
@@ -86,6 +118,19 @@ tests/CMClientCenter.PowerShell.Tests  Unit tests for the Runspace engine/execut
 ```
 
 Project scaffolding is in place; test coverage is still being built out.
+
+## Contributing
+
+Bug reports, feature requests, and PRs are welcome — see
+[CONTRIBUTING.md](CONTRIBUTING.md) for how to get set up and what to know
+before opening a PR.
+
+Found a security issue? Please don't open a public issue — see
+[SECURITY.md](SECURITY.md) for how to report it.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for what's new in each release.
 
 ## Acknowledgements
 
