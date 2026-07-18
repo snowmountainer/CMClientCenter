@@ -81,10 +81,20 @@
 
     <!--
       Shortcut-only component (no File child) — Windows Installer requires
-      every component to have a KeyPath, so the HKLM registry value below
-      serves that role instead. HKLM (not HKCU) matches Scope="perMachine":
-      the value — and the shortcut — exist once for the machine, not once
-      per user profile.
+      every component to have a KeyPath, so the registry value below serves
+      that role instead.
+
+      Root is HKCU, NOT HKLM, even though this is a perMachine package —
+      counterintuitive, but this is WiX's documented pattern for exactly
+      this case. ProgramMenuFolder is classified as a "user profile
+      capable" directory by MSI's static validation regardless of
+      Scope="perMachine", so ICE38/ICE43/ICE57 reject an HKLM (or HKMU)
+      KeyPath here with e.g. "Component ... has both per-user and
+      per-machine data with a per-machine KeyPath". HKCU satisfies the
+      validator; it does NOT change where the shortcut file itself ends up
+      — that's controlled entirely by Scope="perMachine" (which sets
+      ALLUSERS=1), which is what makes ProgramMenuFolder resolve to the
+      All Users Start Menu at install time rather than the per-user one.
     -->
     <Component Id="ProgramMenuShortcutComponent" Directory="ProgramMenuFolder" Guid="*">
       <Shortcut Id="ProgramMenuShortcut"
@@ -93,7 +103,7 @@
                 Target="[INSTALLFOLDER]CMClientCenter.App.exe"
                 WorkingDirectory="INSTALLFOLDER"
                 Icon="AppIcon.ico" />
-      <RegistryValue Root="HKLM"
+      <RegistryValue Root="HKCU"
                       Key="Software\snowmountainer\CMClientCenter"
                       Name="Installed"
                       Type="integer"
