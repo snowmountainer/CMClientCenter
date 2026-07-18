@@ -1,8 +1,9 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Builds a self-contained, unpackaged release of CMClientCenter and zips it
-    up as a release artifact (e.g. for a GitHub Release).
+    Builds a self-contained, unpackaged release of CMClientCenter and
+    packages it as both a ZIP and an MSI installer (e.g. for a GitHub
+    Release).
 
 .DESCRIPTION
     Runs `dotnet publish` for the App project only (Core/PowerShell/Shared
@@ -11,6 +12,12 @@
     end user needs to run the app: CMClientCenter.App.exe, its DLLs, the
     Windows App SDK runtime files (bundled in via WindowsAppSDKSelfContained),
     and the PSScripts\ folder with the built-in "Run PS" script library.
+
+    That same staged output is then packaged two ways: a ZIP (xcopy-deploy,
+    same as before) and an MSI built from installer\Package.wxs (installs to
+    C:\Program Files\snowmountainer\CMClientCenter, creates an All Users
+    Start Menu shortcut, supports silent install via msiexec /quiet for
+    Intune/MECM/GPO deployment). Use -SkipInstaller to produce just the ZIP.
 
     Requires the .NET SDK and the Windows App SDK / Windows 10/11 SDK
     components (Visual Studio 2022 with the "Windows application
@@ -24,6 +31,11 @@
 
 .PARAMETER Configuration
     Build configuration, defaults to Release.
+
+.PARAMETER SkipInstaller
+    Skips building CMClientCenter-Setup.msi and produces only the ZIP, e.g.
+    on a machine that doesn't have the WiX Toolset available. The ZIP has
+    always been the primary artifact; the MSI is additive.
 
 .EXAMPLE
     .\publish-release.ps1 -Version 0.1.0.0
@@ -41,7 +53,9 @@ param(
     [Parameter(Mandatory)]
     [string]$Version,
 
-    [string]$Configuration = "Release"
+    [string]$Configuration = "Release",
+
+    [switch]$SkipInstaller
 )
 
 $ErrorActionPreference = "Stop"
@@ -165,12 +179,70 @@ if ($removedFolders) {
 Write-Host "==> Creating $zipPath" -ForegroundColor Cyan
 Compress-Archive -Path "$stagingDir\*" -DestinationPath $zipPath -CompressionLevel Optimal
 
-Remove-Item $stagingDir -Recurse -Force
-
 $zipSizeMB = [math]::Round((Get-Item $zipPath).Length / 1MB, 1)
 Write-Host "==> Done: $zipPath ($zipSizeMB MB)" -ForegroundColor Green
+
+# --- Build the MSI installer -------------------------------------------------
+# Reuses $stagingDir (same pdb-free, language-trimmed content as the ZIP) as
+# the MSI's source, so the two release artifacts never drift apart. Built
+# from source here (not restored from a prior build) with `dotnet build`
+# against the WixToolset.Sdk-based .wixproj — requires the WiX v5 MSBuild SDK
+# to already be resolvable via NuGet (first run downloads it automatically,
+# no separate `wix` CLI install needed).
+
+$msiPath = $null
+if (-not $SkipInstaller) {
+    Write-Host "==> Building CMClientCenter-Setup.msi" -ForegroundColor Cyan
+
+    # MSI ProductVersion is strictly Major.Minor.Build (3 fields, each
+    # capped — Windows Installer has no 4th field like AssemblyVersion does).
+    # A 4-part -Version (e.g. 0.1.0.0, matching this script's own examples)
+    # is truncated here rather than rejected, since the ZIP/folder name is
+    # allowed to keep all 4 parts and there's no reason to force callers to
+    # pass two different version strings for one release.
+    $parsedVersion = [version]$Version
+    $msiVersion = "{0}.{1}.{2}" -f $parsedVersion.Major, $parsedVersion.Minor, [Math]::Max($parsedVersion.Build, 0)
+
+    $installerProject = Join-Path $repoRoot "installer\CMClientCenter.Installer.wixproj"
+    $installerOutDir  = Join-Path $repoRoot "publish\.installer-build-$Version"
+    if (Test-Path $installerOutDir) { Remove-Item $installerOutDir -Recurse -Force }
+
+    dotnet build $installerProject `
+        --configuration $Configuration `
+        -p:PublishDir=$stagingDir `
+        -p:ProductVersion=$msiVersion `
+        -p:RepoRoot=$repoRoot `
+        --output $installerOutDir
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "MSI build failed with exit code $LASTEXITCODE  see output above. Re-run with -SkipInstaller to produce just the ZIP while you investigate."
+    }
+
+    $builtMsi = Join-Path $installerOutDir "CMClientCenter-Setup.msi"
+    if (-not (Test-Path $builtMsi)) {
+        throw "dotnet build reported success but $builtMsi is missing  check the wixproj OutputName matches."
+    }
+
+    $msiPath = Join-Path $repoRoot "publish\CMClientCenter-$Version-win-x64-Setup.msi"
+    Copy-Item $builtMsi $msiPath -Force
+    Remove-Item $installerOutDir -Recurse -Force
+
+    $msiSizeMB = [math]::Round((Get-Item $msiPath).Length / 1MB, 1)
+    Write-Host "==> Done: $msiPath ($msiSizeMB MB)" -ForegroundColor Green
+} else {
+    Write-Host "==> Skipping MSI build (-SkipInstaller)" -ForegroundColor Yellow
+}
+
+Remove-Item $stagingDir -Recurse -Force
+
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
 Write-Host "  1. Smoke-test: run $exePath on a clean-ish machine/VM (one that doesn't already have the Windows App SDK runtime installed, to catch missing-dependency issues)."
-Write-Host "  2. Create a GitHub Release tagged v$Version and attach $zipPath as a release asset."
-Write-Host "  3. Do NOT commit the publish\ folder to the repo  it's build output, not source (see .gitignore)."
+if ($msiPath) {
+    Write-Host "  2. Smoke-test the installer too: msiexec /i `"$msiPath`" /quiet /log install.log on a clean VM, confirm it lands in C:\Program Files\snowmountainer\CMClientCenter and creates the All Users Start Menu shortcut, then msiexec /x `"$msiPath`" /quiet to confirm a clean uninstall."
+    Write-Host "  3. Create a GitHub Release tagged v$Version and attach both $zipPath and $msiPath as release assets."
+    Write-Host "  4. Do NOT commit the publish\ folder to the repo  it's build output, not source (see .gitignore)."
+} else {
+    Write-Host "  2. Create a GitHub Release tagged v$Version and attach $zipPath as a release asset."
+    Write-Host "  3. Do NOT commit the publish\ folder to the repo  it's build output, not source (see .gitignore)."
+}

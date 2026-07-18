@@ -1,0 +1,29 @@
+<Project Sdk="WixToolset.Sdk/5.0.2">
+
+  <!--
+    Builds CMClientCenter-Setup.msi from the already-published, self-contained
+    app output (see scripts\publish-release.ps1, which builds this project as
+    its final step). This project does NOT build the app itself — it only
+    packages whatever folder PublishDir points at, so it must always run
+    after `dotnet publish` has produced that folder.
+
+    Pinned to WiX v5.0.2 deliberately (not v6/v7): v6+ introduced FireGiant's
+    "Open Source Maintenance Fee" licensing model
+    (https://www.firegiant.com/oss-maintenance-fee/) for commercial users.
+    v5 predates that and remains under the original MS-RL license, which
+    matches this project's own Ms-PL-licensed script heritage. Revisit this
+    pin only after deliberately reviewing that licensing change.
+
+    PublishDir, ProductVersion, and RepoRoot are NOT set here — they're
+    required MSBuild properties passed in from publish-release.ps1 via
+    `-p:PublishDir=... -p:ProductVersion=... -p:RepoRoot=...`. Building this
+    .wixproj directly without them (e.g. `dotnet build` with no extra args)
+    will fail fast with a clear preprocessor error from Package.wxs rather
+    than silently emitting an empty/broken MSI.
+  -->
+  <PropertyGroup>
+    <OutputName>CMClientCenter-Setup</OutputName>
+    <DefineConstants>PublishDir=$(PublishDir);ProductVersion=$(ProductVersion);RepoRoot=$(RepoRoot)</DefineConstants>
+  </PropertyGroup>
+
+</Project>

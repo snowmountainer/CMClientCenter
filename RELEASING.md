@@ -19,6 +19,12 @@ cd CMClientCenter
 This produces:
 - `publish\CMClientCenter-0.1.0.0-win-x64\` — the runnable folder
 - `publish\CMClientCenter-0.1.0.0-win-x64.zip` — the same thing, zipped
+- `publish\CMClientCenter-0.1.0.0-win-x64-Setup.msi` — an installer that puts
+  the app in `C:\Program Files\snowmountainer\CMClientCenter` and adds an All
+  Users Start Menu shortcut (see `installer\Package.wxs`). Requires the WiX
+  v5 Toolset, which `dotnet build` resolves automatically via NuGet on first
+  run — no separate install needed. Skip it with `-SkipInstaller` if WiX
+  isn't available on the build machine and you only need the ZIP.
 
 The `publish\` folder is gitignored — it's build output, never commit it.
 
@@ -35,6 +41,21 @@ the self-contained deployment actually carries everything it needs:
   empty, but a visual check doesn't hurt)
 - Toggle the theme in Settings, confirm the restart flow works
 
+Also smoke-test the MSI itself, ideally on the same clean VM:
+
+```powershell
+msiexec /i CMClientCenter-0.1.0.0-win-x64-Setup.msi /quiet /log install.log
+```
+
+- Confirm the app landed in `C:\Program Files\snowmountainer\CMClientCenter`
+- Confirm the Start Menu shortcut exists for **all** users, not just the
+  installing account (log off/on as a different user, or check
+  `C:\ProgramData\Microsoft\Windows\Start Menu\Programs\CMClientCenter.lnk`
+  directly)
+- Launch via the shortcut, run through the same checklist as above
+- Uninstall cleanly: `msiexec /x CMClientCenter-0.1.0.0-win-x64-Setup.msi /quiet`
+  — confirm the install folder and shortcut are both gone afterward
+
 ## 3. Create the GitHub Release
 
 1. On GitHub: **Releases → Draft a new release**
@@ -45,7 +66,11 @@ the self-contained deployment actually carries everything it needs:
    "Bekannte Einschränkungen / TODOs" section worth calling out as known
    limitations for this early release
 5. Mark as **Pre-release** (this is a 0.x first preview, not a stable 1.0)
-6. Attach `CMClientCenter-0.1.0.0-win-x64.zip` as a release asset
+6. Attach `CMClientCenter-0.1.0.0-win-x64.zip` **and**
+   `CMClientCenter-0.1.0.0-win-x64-Setup.msi` as release assets — the ZIP
+   stays the xcopy-deploy option, the MSI is for Intune/MECM/GPO-style
+   silent deployment (`msiexec /i ... /quiet`) or anyone who just wants a
+   normal Start Menu entry
 7. Publish
 
 ## Notes on what's deliberately NOT in the release build
@@ -58,10 +83,11 @@ the self-contained deployment actually carries everything it needs:
   when `WindowsAppSDKSelfContained=true` + `WindowsPackageType=None` — those
   still ship for every language WinAppSDK itself supports. There's currently
   no supported way around this for this deployment model.
-- **No installer / MSIX:** the app is unpackaged (xcopy-deployable). Users
-  unzip and run `CMClientCenter.exe` directly — no Start menu entry, no
-  auto-update, no uninstaller. That's a deliberate trade-off for a first
-  preview; see `README.md`'s requirements section.
+- **No auto-update:** the MSI installs cleanly and upgrades in place on a
+  newer release (same `UpgradeCode`, see `installer\Package.wxs`), but there
+  is no built-in update *check* — users still need to notice a new release
+  themselves and re-run the installer. The ZIP remains fully xcopy-deployable
+  with no installer at all, for anyone who prefers that.
 - **No PublishSingleFile:** considered, but the core Windows App SDK native
   binaries can't be merged into the single EXE regardless, so the practical
   size/file-count benefit is small — and it adds complexity (extraction to a

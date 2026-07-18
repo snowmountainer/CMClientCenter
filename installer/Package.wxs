@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  CMClientCenter MSI installer.
+
+  Layout produced by this package:
+    C:\Program Files\snowmountainer\CMClientCenter\   (perMachine, all files)
+    Start Menu\Programs\CMClientCenter.lnk             (all users, no subfolder)
+
+  Deliberately minimal:
+    - No WiX UI extension (WixUI_*): this installer targets a fixed path with
+      no user choices to make, so a directory-browse wizard would just add a
+      dependency (+ a License.rtf conversion of LICENSE.txt) for a dialog
+      nobody needs. Windows Installer's own default UI still shows a basic
+      progress dialog on double-click, and msiexec /quiet works for scripted
+      deployment (Intune/MECM/GPO) either way. Add WixUI_InstallDir later if
+      an interactive install experience is ever wanted.
+    - No custom actions, no services, no registry beyond the one KeyPath
+      value the shortcut component needs (see below) — nothing here needs
+      more than what Windows Installer does natively.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <Package Name="CMClientCenter"
+            Manufacturer="snowmountainer"
+            Version="$(ProductVersion)"
+            UpgradeCode="19485633-3105-4385-9994-4e95cff55d62"
+            Language="1033"
+            Platform="x64"
+            Scope="perMachine">
+
+    <SummaryInformation Description="CMClientCenter Setup" Manufacturer="snowmountainer" />
+
+    <!--
+      UpgradeCode above is fixed forever — generated once
+      (19485633-3105-4385-9994-4e95cff55d62), never regenerate it. It's the
+      only thing that lets a v1.1.0 MSI recognize "a v1.0.0 of this same
+      product is already installed, remove it first" via MajorUpgrade below.
+      Regenerating it would turn every future release into a parallel-install
+      instead of an upgrade.
+    -->
+    <MajorUpgrade
+      DowngradeErrorMessage="A newer version of CMClientCenter is already installed. Please uninstall it first if you need to downgrade." />
+
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- Program Files\snowmountainer\CMClientCenter -->
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="ManufacturerFolder" Name="snowmountainer">
+        <Directory Id="INSTALLFOLDER" Name="CMClientCenter" />
+      </Directory>
+    </StandardDirectory>
+
+    <!-- Start Menu\Programs — used directly, no CMClientCenter subfolder,
+         see the top-of-file note on why there's no WixUI here either. -->
+    <StandardDirectory Id="ProgramMenuFolder" />
+
+    <Icon Id="AppIcon.ico" SourceFile="$(RepoRoot)\src\CMClientCenter.App\CMClientCenter.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon.ico" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/snowmountainer/CMClientCenter" />
+    <!-- No maintenance UI (no WixUI = no "Change" option makes sense anyway)
+         so hide the "Modify" button in Programs and Features; Repair/Remove
+         still work fine without it. -->
+    <Property Id="ARPNOMODIFY" Value="1" />
+
+    <!--
+      All app files (CMClientCenter.App.exe, its DLLs, the bundled Windows
+      App SDK runtime, and PSScripts\) are harvested straight from
+      PublishDir using WiX v5's native Files globbing — no heat.exe, no
+      manually maintained file list. PublishDir must already be pdb-free and
+      language-trimmed by the time this runs; publish-release.ps1 points it
+      at the same staged folder it uses for the release ZIP, so both
+      artifacts always contain exactly the same files.
+    -->
+    <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
+      <Files Include="$(PublishDir)\**" />
+    </ComponentGroup>
+
+    <!--
+      Shortcut-only component (no File child) — Windows Installer requires
+      every component to have a KeyPath, so the HKLM registry value below
+      serves that role instead. HKLM (not HKCU) matches Scope="perMachine":
+      the value — and the shortcut — exist once for the machine, not once
+      per user profile.
+    -->
+    <Component Id="ProgramMenuShortcutComponent" Directory="ProgramMenuFolder" Guid="*">
+      <Shortcut Id="ProgramMenuShortcut"
+                Name="CMClientCenter"
+                Description="MECM/SCCM Client Management Tool"
+                Target="[INSTALLFOLDER]CMClientCenter.App.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="AppIcon.ico" />
+      <RegistryValue Root="HKLM"
+                      Key="Software\snowmountainer\CMClientCenter"
+                      Name="Installed"
+                      Type="integer"
+                      Value="1"
+                      KeyPath="yes" />
+    </Component>
+
+    <Feature Id="MainFeature" Title="CMClientCenter" Level="1">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentRef Id="ProgramMenuShortcutComponent" />
+    </Feature>
+
+  </Package>
+</Wix>
