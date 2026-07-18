@@ -23,6 +23,15 @@
   -->
   <PropertyGroup>
     <OutputName>CMClientCenter-Setup</OutputName>
+    <!--
+      This is how WiX v5 targets x64 (ProgramFiles64Folder, 64-bit registry
+      view, etc.) — via this MSBuild property, not a Platform attribute on
+      the <Package> element in Package.wxs (that was WiX v3 syntax and no
+      longer exists in v5's schema; using it fails the build with
+      WIX0004: "The Package element contains an unexpected attribute
+      'Platform'"). Matches CMClientCenter.App.csproj, which is win-x64-only.
+    -->
+    <InstallerPlatform>x64</InstallerPlatform>
     <DefineConstants>PublishDir=$(PublishDir);ProductVersion=$(ProductVersion);RepoRoot=$(RepoRoot)</DefineConstants>
   </PropertyGroup>
 

@@ -25,7 +25,6 @@
             Version="$(ProductVersion)"
             UpgradeCode="19485633-3105-4385-9994-4e95cff55d62"
             Language="1033"
-            Platform="x64"
             Scope="perMachine">
 
     <SummaryInformation Description="CMClientCenter Setup" Manufacturer="snowmountainer" />
@@ -43,7 +42,12 @@
 
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
-    <!-- Program Files\snowmountainer\CMClientCenter -->
+    <!-- Program Files\snowmountainer\CMClientCenter
+         ProgramFiles64Folder only resolves correctly to the 64-bit path
+         when the package is actually built for x64 — that's controlled by
+         <InstallerPlatform>x64</InstallerPlatform> in
+         CMClientCenter.Installer.wixproj (the old WiX v3 Platform="x64"
+         attribute on <Package> no longer exists in v5's schema). -->
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="ManufacturerFolder" Name="snowmountainer">
         <Directory Id="INSTALLFOLDER" Name="CMClientCenter" />
