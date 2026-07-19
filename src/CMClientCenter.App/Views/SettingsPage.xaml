@@ -18,8 +18,10 @@
         <InfoBar x:Name="RestartBar" IsOpen="False" IsClosable="False" Severity="Informational"
                  Title="Restart required"
                  Message="Some elements (cards, backgrounds) only fully apply the new theme after restarting the app. The navigation pane updates immediately."/>
-        <Button x:Name="RestartBarCloseButton" Content="Restart now" Click="RestartBar_Close_Click"
-                HorizontalAlignment="Left" Visibility="Collapsed"/>
+        <StackPanel x:Name="RestartActionsPanel" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
+            <Button x:Name="RestartNowButton" Content="Restart now" Click="RestartNow_Click"/>
+            <Button x:Name="RestartCancelButton" Content="Cancel" Click="RestartCancel_Click"/>
+        </StackPanel>
 
         <StackPanel Spacing="4">
             <TextBlock Text="Scripts folder (Console → Run PS)" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>

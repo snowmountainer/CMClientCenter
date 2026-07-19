@@ -18,6 +18,16 @@ public sealed partial class SettingsPage : Page
 
     private bool _suppressSelectionEvent;
 
+    /// <summary>
+    /// Auto-restart countdown after a theme change. DispatcherQueueTimer
+    /// (not System.Threading.Timer/System.Timers.Timer) specifically —
+    /// it ticks on this window's UI thread already, so InfoBar/Button
+    /// updates in the Tick handler don't need an extra TryEnqueue.
+    /// </summary>
+    private DispatcherQueueTimer? _restartTimer;
+    private int _restartSecondsRemaining;
+    private const int RestartCountdownSeconds = 5;
+
     public SettingsPage()
     {
         InitializeComponent();
@@ -90,11 +100,67 @@ public sealed partial class SettingsPage : Page
         // on the UI thread in WinUI 3 (no automatic SynchronizationContext capture
         // like WPF/WinForms) — touching RestartBar directly here crashed on some
         // machines even though it worked on the dev box. Always dispatch explicitly.
-        _dispatcher.TryEnqueue(() =>
+        _dispatcher.TryEnqueue(StartRestartCountdown);
+    }
+
+    /// <summary>
+    /// Starts (or restarts, if already running — e.g. the user flips between
+    /// two themes before the countdown finishes) a few-seconds countdown that
+    /// auto-restarts the app, with a Cancel button for anyone who'd rather not
+    /// lose whatever they're in the middle of (an open remote connection, an
+    /// in-progress script run, ...). A restart always drops those regardless
+    /// of whether it's triggered automatically or by the old manual-only
+    /// button, so Cancel — not a longer delay — is what actually addresses
+    /// that; the countdown itself just avoids an instant, no-warning restart.
+    /// </summary>
+    private void StartRestartCountdown()
+    {
+        RestartBar.IsOpen = true;
+        RestartActionsPanel.Visibility = Visibility.Visible;
+        RestartCancelButton.Visibility = Visibility.Visible;
+
+        _restartSecondsRemaining = RestartCountdownSeconds;
+        UpdateRestartCountdownUi();
+
+        if (_restartTimer is null)
         {
-            RestartBar.IsOpen = true;
-            RestartBarCloseButton.Visibility = Visibility.Visible;
-        });
+            _restartTimer = _dispatcher.CreateTimer();
+            _restartTimer.Interval = TimeSpan.FromSeconds(1);
+            _restartTimer.Tick += (_, _) =>
+            {
+                _restartSecondsRemaining--;
+                if (_restartSecondsRemaining <= 0)
+                {
+                    _restartTimer!.Stop();
+                    DoRestart();
+                    return;
+                }
+                UpdateRestartCountdownUi();
+            };
+        }
+
+        _restartTimer.Start();
+    }
+
+    private void UpdateRestartCountdownUi()
+    {
+        RestartBar.Title = $"Restarting in {_restartSecondsRemaining}s to apply the new theme";
+    }
+
+    private void RestartNow_Click(object sender, RoutedEventArgs e)
+    {
+        _restartTimer?.Stop();
+        DoRestart();
+    }
+
+    private void RestartCancel_Click(object sender, RoutedEventArgs e)
+    {
+        _restartTimer?.Stop();
+        RestartBar.Title = "Restart required";
+        RestartCancelButton.Visibility = Visibility.Collapsed;
+        // "Restart now" stays visible and RestartBar stays open — the theme
+        // is still only partially applied until an actual restart happens,
+        // so the user should still be able to trigger one manually later.
     }
 
     /// <summary>
@@ -125,7 +191,7 @@ public sealed partial class SettingsPage : Page
         _dispatcher.TryEnqueue(() => ScriptsFolderBox.Text = _settingsService.EffectiveScriptsFolder);
     }
 
-    private void RestartBar_Close_Click(object sender, RoutedEventArgs e)
+    private void DoRestart()
     {
         // AppInstance.Restart() is the "official" WinUI 3 restart API, but it has a
         // known issue on unpackaged self-contained apps (FileNotFoundException in
