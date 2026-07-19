@@ -12,11 +12,12 @@ Built for Workplace Engineers who need a fast, modern tool to inspect and manage
 [![Latest Release](https://img.shields.io/github/v/release/snowmountainer/CMClientCenter?include_prereleases)](https://github.com/snowmountainer/CMClientCenter/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/snowmountainer/CMClientCenter/total)](https://github.com/snowmountainer/CMClientCenter/releases)
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Dashboard_Dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="assets/images/Dashboard.png">
-  <img alt="CMClientCenter Dashboard" src="assets/images/Dashboard.png">
-</picture>
+<img alt="CMClientCenter Dashboard" src="assets/images/Dashboard.png">
+
+<details>
+<summary>🌙 Show Dark Mode</summary>
+<img alt="CMClientCenter Dashboard (Dark)" src="assets/images/Dashboard_Dark.png">
+</details>
 
 ---
 
@@ -51,26 +52,28 @@ Built for Workplace Engineers who need a fast, modern tool to inspect and manage
 
 ## Screenshots
 
-Every screenshot below switches automatically between light and dark to match your GitHub theme.
+Click **🌙 Dark** under any screenshot to toggle it.
 
 <table>
 <tr>
 <td width="50%">
 
 **Dashboard**
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Dashboard_Dark.png">
-  <img alt="Dashboard" src="assets/images/Dashboard.png">
-</picture>
+<img alt="Dashboard" src="assets/images/Dashboard.png">
+<details>
+<summary>🌙 Dark</summary>
+<img alt="Dashboard (Dark)" src="assets/images/Dashboard_Dark.png">
+</details>
 
 </td>
 <td width="50%">
 
 **Agent Status**
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Agent%20Status_Dark.png">
-  <img alt="Agent Status" src="assets/images/Agent%20Status.png">
-</picture>
+<img alt="Agent Status" src="assets/images/Agent%20Status.png">
+<details>
+<summary>🌙 Dark</summary>
+<img alt="Agent Status (Dark)" src="assets/images/Agent%20Status_Dark.png">
+</details>
 
 </td>
 </tr>
@@ -78,19 +81,21 @@ Every screenshot below switches automatically between light and dark to match yo
 <td width="50%">
 
 **Hardware**
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Hardware_Dark.png">
-  <img alt="Hardware" src="assets/images/Hardware.png">
-</picture>
+<img alt="Hardware" src="assets/images/Hardware.png">
+<details>
+<summary>🌙 Dark</summary>
+<img alt="Hardware (Dark)" src="assets/images/Hardware_Dark.png">
+</details>
 
 </td>
 <td width="50%">
 
 **Software**
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Software_Dark.png">
-  <img alt="Software" src="assets/images/Software.png">
-</picture>
+<img alt="Software" src="assets/images/Software.png">
+<details>
+<summary>🌙 Dark</summary>
+<img alt="Software (Dark)" src="assets/images/Software_Dark.png">
+</details>
 
 </td>
 </tr>
@@ -98,19 +103,21 @@ Every screenshot below switches automatically between light and dark to match yo
 <td width="50%">
 
 **Actions**
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Actions_Dark.png">
-  <img alt="Actions" src="assets/images/Actions.png">
-</picture>
+<img alt="Actions" src="assets/images/Actions.png">
+<details>
+<summary>🌙 Dark</summary>
+<img alt="Actions (Dark)" src="assets/images/Actions_Dark.png">
+</details>
 
 </td>
 <td width="50%">
 
 **Software Center**
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Software%20Center_Dark.png">
-  <img alt="Software Center" src="assets/images/Software%20Center.png">
-</picture>
+<img alt="Software Center" src="assets/images/Software%20Center.png">
+<details>
+<summary>🌙 Dark</summary>
+<img alt="Software Center (Dark)" src="assets/images/Software%20Center_Dark.png">
+</details>
 
 </td>
 </tr>
@@ -118,19 +125,21 @@ Every screenshot below switches automatically between light and dark to match yo
 <td width="50%">
 
 **Updates**
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Updates_Dark.png">
-  <img alt="Updates" src="assets/images/Updates.png">
-</picture>
+<img alt="Updates" src="assets/images/Updates.png">
+<details>
+<summary>🌙 Dark</summary>
+<img alt="Updates (Dark)" src="assets/images/Updates_Dark.png">
+</details>
 
 </td>
 <td width="50%">
 
 **Tools**
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Tools_Dark.png">
-  <img alt="Tools" src="assets/images/Tools.png">
-</picture>
+<img alt="Tools" src="assets/images/Tools.png">
+<details>
+<summary>🌙 Dark</summary>
+<img alt="Tools (Dark)" src="assets/images/Tools_Dark.png">
+</details>
 
 </td>
 </tr>
@@ -138,19 +147,21 @@ Every screenshot below switches automatically between light and dark to match yo
 <td width="50%">
 
 **Console**
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Console_Dark.png">
-  <img alt="Console" src="assets/images/Console.png">
-</picture>
+<img alt="Console" src="assets/images/Console.png">
+<details>
+<summary>🌙 Dark</summary>
+<img alt="Console (Dark)" src="assets/images/Console_Dark.png">
+</details>
 
 </td>
 <td width="50%">
 
 **Logs**
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Logs_Dark.png">
-  <img alt="Logs" src="assets/images/Logs.png">
-</picture>
+<img alt="Logs" src="assets/images/Logs.png">
+<details>
+<summary>🌙 Dark</summary>
+<img alt="Logs (Dark)" src="assets/images/Logs_Dark.png">
+</details>
 
 </td>
 </tr>
@@ -158,10 +169,11 @@ Every screenshot below switches automatically between light and dark to match yo
 <td width="50%">
 
 **Settings**
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Settings_Dark.png">
-  <img alt="Settings" src="assets/images/Settings.png">
-</picture>
+<img alt="Settings" src="assets/images/Settings.png">
+<details>
+<summary>🌙 Dark</summary>
+<img alt="Settings (Dark)" src="assets/images/Settings_Dark.png">
+</details>
 
 </td>
 <td width="50%"></td>
