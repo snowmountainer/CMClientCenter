@@ -12,6 +12,12 @@ Built for Workplace Engineers who need a fast, modern tool to inspect and manage
 [![Latest Release](https://img.shields.io/github/v/release/snowmountainer/CMClientCenter?include_prereleases)](https://github.com/snowmountainer/CMClientCenter/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/snowmountainer/CMClientCenter/total)](https://github.com/snowmountainer/CMClientCenter/releases)
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Dashboard_Dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="assets/images/Dashboard.png">
+  <img alt="CMClientCenter Dashboard" src="assets/images/Dashboard.png">
+</picture>
+
 ---
 
 > [!WARNING]
@@ -42,6 +48,125 @@ Built for Workplace Engineers who need a fast, modern tool to inspect and manage
 | **Console** | **Open Console** — interactive remote PowerShell session (`Enter-PSSession`) in a new window, pass-through Kerberos/NTLM. **Run PS** — built-in script library (70 scripts from the original Client Center tool, grouped by folder) plus your own custom `.ps1` scripts from a configurable folder, run against the connected computer with live, copyable output |
 | **Logs** | CCM log viewer with CMTrace format parsing, filter, color-coded severity, separate tabs for CCM Client / CCMSetup / PSADT logs, selectable/copyable entries (per-field selection, "Copy All", right-click "Copy line") |
 | **Settings** | Light/Dark/System theme, custom scripts folder location |
+
+## Screenshots
+
+Every screenshot below switches automatically between light and dark to match your GitHub theme.
+
+<table>
+<tr>
+<td width="50%">
+
+**Dashboard**
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Dashboard_Dark.png">
+  <img alt="Dashboard" src="assets/images/Dashboard.png">
+</picture>
+
+</td>
+<td width="50%">
+
+**Agent Status**
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Agent%20Status_Dark.png">
+  <img alt="Agent Status" src="assets/images/Agent%20Status.png">
+</picture>
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Hardware**
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Hardware_Dark.png">
+  <img alt="Hardware" src="assets/images/Hardware.png">
+</picture>
+
+</td>
+<td width="50%">
+
+**Software**
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Software_Dark.png">
+  <img alt="Software" src="assets/images/Software.png">
+</picture>
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Actions**
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Actions_Dark.png">
+  <img alt="Actions" src="assets/images/Actions.png">
+</picture>
+
+</td>
+<td width="50%">
+
+**Software Center**
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Software%20Center_Dark.png">
+  <img alt="Software Center" src="assets/images/Software%20Center.png">
+</picture>
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Updates**
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Updates_Dark.png">
+  <img alt="Updates" src="assets/images/Updates.png">
+</picture>
+
+</td>
+<td width="50%">
+
+**Tools**
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Tools_Dark.png">
+  <img alt="Tools" src="assets/images/Tools.png">
+</picture>
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Console**
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Console_Dark.png">
+  <img alt="Console" src="assets/images/Console.png">
+</picture>
+
+</td>
+<td width="50%">
+
+**Logs**
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Logs_Dark.png">
+  <img alt="Logs" src="assets/images/Logs.png">
+</picture>
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Settings**
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/Settings_Dark.png">
+  <img alt="Settings" src="assets/images/Settings.png">
+</picture>
+
+</td>
+<td width="50%"></td>
+</tr>
+</table>
 
 ## Installation
 
